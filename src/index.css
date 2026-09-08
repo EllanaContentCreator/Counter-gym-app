@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  --color-teal-900: #0b4f4a;
+  --color-teal-700: #0f766e;
+  --color-teal-500: #14b8a6;
+  --color-teal-100: #cdeeea;
+  --color-teal-50: #ecf8f6;
+  --color-coral-600: #e0553f;
+  --color-coral-500: #f97360;
+  --color-coral-100: #fde3dd;
+  --color-mustard-500: #f5b301;
+  --color-mustard-100: #fff1c2;
+  --color-cream: #fbf7f2;
+  --color-sand: #f1eae2;
+  --color-ink: #1f2a2e;
+  --color-ink-soft: #566369;
+  --color-ink-mute: #8a959a;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Bebas Neue", "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --shadow-card: 0 4px 20px rgba(15, 118, 110, 0.08);
+}
+
+html, body, #root { height: 100%; }
+html { background: var(--color-cream); -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+input, select, textarea, button { font: inherit; }
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+
+.display { font-family: var(--font-display); letter-spacing: 0.02em; }
+.card { background: #fff; border-radius: 18px; box-shadow: var(--shadow-card); }
+.tap { -webkit-tap-highlight-color: transparent; user-select: none; }
+.tap:active { transform: scale(0.98); }
+.scroll-x { overflow-x: auto; scrollbar-width: none; }
+.scroll-x::-webkit-scrollbar { display: none; }
+.safe-bottom { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); }
+.safe-top { padding-top: env(safe-area-inset-top, 0px); }
+
+@keyframes pulse-ring { 0% { transform: scale(0.95); opacity: 0.8; } 100% { transform: scale(1.25); opacity: 0; } }
+.pulse-ring::after { content: ""; position: absolute; inset: 0; border-radius: 9999px; border: 3px solid currentColor; animation: pulse-ring 1s ease-out infinite; }
+@keyframes fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.fade-up { animation: fade-up 0.25s ease-out both; }
