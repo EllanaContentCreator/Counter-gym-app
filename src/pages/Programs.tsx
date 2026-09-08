@@ -29,7 +29,7 @@ export default function Programs() {
     };
     actions.upsertProgram(p);
     setCreating(false);
-    nav(`/programs/${p.id}?edit=1`);
+    nav(`/programs/${p.id}/edit`);
   };
 
   return (

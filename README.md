@@ -23,6 +23,13 @@ weight and rep stored on the device.
 - **Timer** — tabata (configurable), rest countdown, stopwatch.
 - **Backup** — export/import a JSON backup to move between phones. No account, no server.
 
+## Deploy in one click
+
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/EllanaContentCreator/counter-gym-app)
+
+`netlify.toml` already holds the build settings, so Netlify needs nothing else. Once it is live, share the
+link; each person opens it on her phone and adds it to the home screen.
+
 ## Run it
 
 ```bash

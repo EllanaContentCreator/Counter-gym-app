@@ -10,7 +10,7 @@ export default function Onboarding() {
     <div className="mx-auto flex min-h-dvh w-full max-w-[520px] flex-col justify-between px-6 py-10">
       <div>
         <div className="flex items-center gap-3">
-          <img src="/icons/icon-192.png" alt="" className="h-14 w-14 rounded-2xl shadow-card" />
+          <img src={(window as unknown as { __COUNTER_IMAGES?: Record<string, string> }).__COUNTER_IMAGES?.__icon ?? `${import.meta.env.BASE_URL}icons/icon-192.png`} alt="" className="h-14 w-14 rounded-2xl shadow-card" />
           <div>
             <div className="display text-[40px] leading-none text-teal-700">Counter</div>
             <div className="text-xs font-bold uppercase tracking-[0.2em] text-coral-500">Accountability training</div>

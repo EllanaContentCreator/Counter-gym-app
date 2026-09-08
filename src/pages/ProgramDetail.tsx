@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useParams, useSearch } from "wouter";
+import { Link, useLocation, useParams } from "wouter";
 import { useAppData, actions, uid } from "@/lib/store";
 import { cn, findExercise, isAll, isTabata, isSuperset, rowName, stationNumber, formatDate, historyFor } from "@/lib/utils";
 import { Header, TimerButton } from "@/components/Header";
@@ -69,12 +69,11 @@ export function SheetTable({ program, custom, onEdit, editing }: { program: Prog
 }
 
 export default function ProgramDetail() {
-  const { id } = useParams<{ id: string }>();
-  const search = useSearch();
+  const { id, edit } = useParams<{ id: string; edit?: string }>();
   const data = useAppData();
   const [, nav] = useLocation();
   const program = data.programs.find((p) => p.id === id);
-  const [editing, setEditing] = useState(search.includes("edit=1"));
+  const [editing, setEditing] = useState(edit === "edit");
   const [row, setRow] = useState<ProgramRow | null>(null);
   const [picking, setPicking] = useState(false);
   const [meta, setMeta] = useState(false);
@@ -187,7 +186,7 @@ export default function ProgramDetail() {
             </div>
             <div className="grid grid-cols-2 gap-2">
               <Button variant="secondary" onClick={() => setEditing(true)}>✎ Edit sheet</Button>
-              <Button variant="secondary" onClick={() => { const nid = actions.duplicateProgram(program.id); if (nid) nav(`/programs/${nid}?edit=1`); }}>⧉ Duplicate</Button>
+              <Button variant="secondary" onClick={() => { const nid = actions.duplicateProgram(program.id); if (nid) nav(`/programs/${nid}/edit`); }}>⧉ Duplicate</Button>
             </div>
           </div>
         )}

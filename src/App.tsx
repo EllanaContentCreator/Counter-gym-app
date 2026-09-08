@@ -1,4 +1,5 @@
-import { Route, Switch, useLocation, Link } from "wouter";
+import { Route, Router, Switch, useLocation, Link } from "wouter";
+import { useHashLocation } from "wouter/use-hash-location";
 import { useEffect, useState } from "react";
 import { useAppData, loadActiveSession } from "@/lib/store";
 import { cn, formatClock } from "@/lib/utils";
@@ -74,11 +75,12 @@ export default function App() {
   }, []);
   if (!data.profile.onboarded) return <Onboarding />;
   return (
+    <Router hook={useHashLocation}>
     <div className="mx-auto min-h-dvh w-full max-w-[520px]">
       <Switch>
         <Route path="/" component={Today} />
         <Route path="/programs" component={Programs} />
-        <Route path="/programs/:id" component={ProgramDetail} />
+        <Route path="/programs/:id/:edit?" component={ProgramDetail} />
         <Route path="/library" component={Library} />
         <Route path="/library/:id" component={ExerciseDetail} />
         <Route path="/workout" component={Workout} />
@@ -96,5 +98,6 @@ export default function App() {
       <ActiveWorkoutBar />
       <BottomNav />
     </div>
+    </Router>
   );
 }
