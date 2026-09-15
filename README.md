@@ -29,6 +29,11 @@ weight and rep stored on the device.
 - **Timer** — tabata (configurable), rest countdown, stopwatch.
 - **Backup** — export/import a JSON backup to move between phones. No account, no server.
 
+## Where it lives
+
+**https://ellanacontentcreator.github.io/Counter-gym-app/** — published automatically from `main` by the
+GitHub Pages workflow in `.github/workflows/pages.yml`. Open it on your phone and add it to the home screen.
+
 ## Deploy in one click
 
 [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/EllanaContentCreator/counter-gym-app)
