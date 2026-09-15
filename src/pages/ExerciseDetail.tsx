@@ -6,6 +6,9 @@ import { findExercise, historyFor, bestWeightFor, formatDate, cn } from "@/lib/u
 import { Header } from "@/components/Header";
 import { Button, Card, Pill, Sheet } from "@/components/ui";
 import { ExerciseImage } from "@/components/ExerciseImage";
+import { MuscleMap } from "@/components/MuscleMap";
+import { FormDiagram } from "@/components/FormDiagram";
+import { IconBody, IconStar } from "@/components/Icons";
 import { EQUIPMENT_BY_ID, MUSCLE_LABELS } from "@/data/equipment";
 import { CustomExerciseSheet } from "./Library";
 
@@ -26,7 +29,7 @@ export default function ExerciseDetail() {
   return (
     <div className="safe-bottom">
       <Header title={ex.name} back="/library" right={
-        <button onClick={() => actions.toggleFavourite(ex.id)} aria-label="Favourite" className={cn("tap grid h-10 w-10 place-items-center rounded-full bg-white text-xl shadow-card", fav ? "text-mustard-500" : "text-ink-mute")}>★</button>
+        <button onClick={() => actions.toggleFavourite(ex.id)} aria-label="Favourite" className={cn("tap grid h-10 w-10 place-items-center rounded-full bg-white shadow-card", fav ? "text-mustard-500" : "text-ink-mute")}><IconStar size={20} filled={fav} /></button>
       } />
       <div className="space-y-4 px-4 pt-1">
         <Card className="overflow-hidden p-0">
@@ -41,17 +44,27 @@ export default function ExerciseDetail() {
           </div>
         </Card>
 
+        <Card className="overflow-hidden p-0">
+          <div className="flex items-center gap-2 px-4 pt-4">
+            <span className="grid h-8 w-8 place-items-center rounded-xl grad-coral text-white"><IconBody size={18} /></span>
+            <div>
+              <h3 className="display text-[20px] leading-none">Muscles worked</h3>
+              <div className="text-[11px] font-semibold text-ink-mute">Brightest = main muscle · softer = helpers</div>
+            </div>
+          </div>
+          <div className="illo-bg mt-3 px-4 pb-3 pt-2">
+            <MuscleMap muscles={ex.muscles} />
+          </div>
+          <div className="flex flex-wrap gap-1.5 px-4 py-3">
+            {ex.muscles.map((m, i) => (
+              <span key={m} className={cn("rounded-full px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide", i === 0 ? "grad-coral text-white shadow-sm" : "bg-coral-100 text-coral-700")}>{MUSCLE_LABELS[m]}</span>
+            ))}
+          </div>
+        </Card>
+
         <Card>
           <h3 className="display text-[20px]">How to do it</h3>
-          <ol className="mt-2 space-y-2">
-            {ex.cues.map((c, i) => (
-              <li key={i} className="flex gap-3 text-sm">
-                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-teal-100 text-xs font-extrabold text-teal-900">{i + 1}</span>
-                <span>{c}</span>
-              </li>
-            ))}
-            {ex.cues.length === 0 && <li className="text-sm text-ink-soft">No cues yet.</li>}
-          </ol>
+          <FormDiagram exercise={ex} className="mt-3" />
         </Card>
 
         <div className="grid grid-cols-3 gap-2">
@@ -66,11 +79,11 @@ export default function ExerciseDetail() {
             <div className="mt-2 h-44">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chart} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-                  <CartesianGrid stroke="#f1eae2" vertical={false} />
-                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#8a959a" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: "#8a959a" }} axisLine={false} tickLine={false} />
+                  <CartesianGrid stroke="#efeafb" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#8683a6" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: "#8683a6" }} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", fontSize: 12 }} />
-                  <Line type="monotone" dataKey="top" stroke="#0f766e" strokeWidth={3} dot={{ r: 4, fill: "#f97360", strokeWidth: 0 }} />
+                  <Line type="monotone" dataKey="top" stroke="#7c3aed" strokeWidth={3} dot={{ r: 4, fill: "#ec4899", strokeWidth: 0 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

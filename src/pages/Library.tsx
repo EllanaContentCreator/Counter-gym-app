@@ -24,14 +24,14 @@ export default function Library() {
         <FilterBar f={f} />
         <div className="flex gap-2">
           <button onClick={() => setFavOnly((v) => !v)} className={cn("tap rounded-full px-3 py-1.5 text-xs font-bold", favOnly ? "bg-mustard-500 text-ink" : "bg-white text-ink-soft shadow-card")}>★ Favourites</button>
-          <button onClick={() => setAdding(true)} className="tap ml-auto rounded-full bg-teal-700 px-3 py-1.5 text-xs font-bold text-white">＋ Custom exercise</button>
+          <button onClick={() => setAdding(true)} className="tap ml-auto rounded-full grad-teal px-3 py-1.5 text-xs font-bold text-white shadow-sm">＋ Custom exercise</button>
         </div>
         <div className="grid grid-cols-2 gap-2">
           {shown.map((e) => {
             const best = bestWeightFor(data.sessions, e.id);
             return (
               <Link key={e.id} href={`/library/${e.id}`} className="card tap overflow-hidden p-0">
-                <ExerciseImage exercise={e} size="xl" className="rounded-none" />
+                <ExerciseImage exercise={e} size="xl" className="rounded-none" muscles />
                 <div className="p-2.5">
                   <div className="line-clamp-2 text-[13px] font-bold leading-tight">{e.name}</div>
                   <div className="mt-1 flex items-center justify-between text-[10px] font-bold uppercase tracking-wide text-ink-mute">

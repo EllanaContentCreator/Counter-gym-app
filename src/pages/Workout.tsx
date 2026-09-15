@@ -7,7 +7,7 @@ import { Button, Card, Field, Sheet, inputCls } from "@/components/ui";
 import { ExerciseImage } from "@/components/ExerciseImage";
 import { ExercisePicker } from "@/components/ExercisePicker";
 import { TabataOverlay } from "@/components/Tabata";
-import { SlotBadge } from "./ProgramDetail";
+import { SlotBadge, stationClass } from "./ProgramDetail";
 import { EXERCISES } from "@/data/exercises";
 import type { Exercise, ProgramRow, SetEntry, WorkoutSession } from "@/lib/types";
 
@@ -178,7 +178,7 @@ export default function Workout() {
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-bold uppercase tracking-widest text-ink-mute">Round</span>
             {[1, 2, 3, 4].map((r) => (
-              <button key={r} onClick={() => setRound(r)} className={cn("tap grid h-9 w-9 place-items-center rounded-full font-extrabold", round === r ? "bg-coral-500 text-white" : "bg-white text-ink-soft shadow-card")}>{r}</button>
+              <button key={r} onClick={() => setRound(r)} className={cn("tap grid h-9 w-9 place-items-center rounded-full font-extrabold", round === r ? "grad-coral text-white shadow-[var(--shadow-coral)]" : "bg-white text-ink-soft shadow-card")}>{r}</button>
             ))}
             <span className="ml-auto text-xs text-ink-soft">{session.entries.length} sets logged</span>
           </div>
@@ -196,7 +196,7 @@ export default function Workout() {
                 const done = session.entries.filter((e) => e.rowId === row.id).length;
                 const ex = findExercise(row.exerciseId, data.customExercises);
                 return (
-                  <Card key={row.id} className="flex items-center gap-3 border-2 border-mustard-500/60 bg-mustard-100/60 p-3">
+                  <Card key={row.id} className="flex items-center gap-3 border-2 border-mustard-500/60 bg-gradient-to-r from-mustard-100 to-white p-3">
                     <ExerciseImage exercise={ex} size="md" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5"><SlotBadge row={row} /></div>
@@ -268,9 +268,10 @@ function StationCard({ row, round, session, custom, unit, lastWeight, best, onLo
   const bumpReps = (d: number) => setReps((r) => String(Math.max(0, (parseInt(r, 10) || 0) + d)));
 
   return (
-    <Card className={cn("p-3", thisRound.length > 0 && "border-2 border-teal-100", isAll(row) && "bg-teal-50")}>
+    <Card className={cn("relative overflow-hidden p-3 pl-4", thisRound.length > 0 && "border-2 border-teal-100", isAll(row) && "bg-teal-50")}>
+      <span className={cn("absolute inset-y-0 left-0 w-1.5", isAll(row) ? "grad-teal" : stationClass(n))} />
       <div className="flex items-start gap-3">
-        <Link href={`/library/${row.exerciseId}`}><ExerciseImage exercise={ex} size="md" /></Link>
+        <Link href={`/library/${row.exerciseId}`}><ExerciseImage exercise={ex} size="md" muscles /></Link>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2"><SlotBadge row={row} />{n && <span className="text-[10px] font-bold uppercase tracking-widest text-ink-mute">Station {n}</span>}</div>
           <div className="mt-1 text-[15px] font-bold leading-tight">{rowName(row, custom)}</div>

@@ -1,32 +1,38 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "wouter";
 import { useAppData, actions, uid } from "@/lib/store";
-import { cn, findExercise, isAll, isTabata, isSuperset, rowName, stationNumber, formatDate, historyFor } from "@/lib/utils";
+import { cn, findExercise, isAll, isTabata, isSuperset, rowName, stationNumber, formatDate, historyFor, toDateInput, fromDateInput, sheetDayLabel } from "@/lib/utils";
 import { Header, TimerButton } from "@/components/Header";
 import { Button, Card, Field, Pill, Sheet, inputCls } from "@/components/ui";
 import { ExerciseImage } from "@/components/ExerciseImage";
 import { ExercisePicker } from "@/components/ExercisePicker";
+import { SheetPhotos } from "@/components/SheetPhotos";
+import { IconBack, IconCopy, IconEdit, IconNext, IconPlay, IconTimer } from "@/components/Icons";
 import { startSession } from "@/lib/session";
 import type { Exercise, Program, ProgramRow } from "@/lib/types";
 
 const SLOTS = ["1", "1+", "2", "2+", "3", "3+", "4", "4+", "ALL", "TABATA"];
 
+export function stationClass(n: number | null) {
+  return n == null ? "station-x" : n >= 1 && n <= 4 ? `station-${n}` : "station-x";
+}
+
 export function SlotBadge({ row }: { row: ProgramRow }) {
-  if (isTabata(row)) return <span className="rounded-md bg-mustard-500 px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-ink">Tabata</span>;
-  if (isAll(row)) return <span className="rounded-md bg-teal-500 px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-white">All</span>;
+  if (isTabata(row)) return <span className="rounded-md bg-ink px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-mustard-300 shadow-sm">Tabata</span>;
+  if (isAll(row)) return <span className="rounded-md grad-teal px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-white shadow-sm">All</span>;
   const n = stationNumber(row);
   return (
     <span className="inline-flex items-center gap-0.5">
-      <span className="grid h-6 w-6 place-items-center rounded-md bg-[#5b7fa6] text-[12px] font-extrabold text-white shadow-[inset_0_-2px_0_rgba(0,0,0,0.2)]">{n}</span>
-      {isSuperset(row) ? <span className="text-sm font-black text-ink-soft">+</span> : <span className="text-ink-soft">.</span>}
+      <span className={cn("grid h-6 w-6 place-items-center rounded-lg text-[12px] font-extrabold text-white shadow-[inset_0_-2px_0_rgba(0,0,0,0.18),0_2px_6px_rgba(0,0,0,0.15)]", stationClass(n))}>{n ?? row.slot}</span>
+      {isSuperset(row) ? <span className="text-sm font-black text-coral-600">+</span> : <span className="text-ink-mute">.</span>}
     </span>
   );
 }
 
 export function SheetTable({ program, custom, onEdit, editing }: { program: Program; custom: Exercise[]; onEdit?: (r: ProgramRow) => void; editing?: boolean }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-sand bg-white shadow-card">
-      <div className="grid grid-cols-[1fr_54px_54px_54px_54px] bg-teal-500 px-2 py-2 text-[10px] font-extrabold uppercase tracking-wide text-white">
+    <div className="overflow-hidden rounded-2xl border border-white/80 bg-white shadow-card">
+      <div className="grid grid-cols-[1fr_54px_54px_54px_54px] grad-teal px-2 py-2.5 text-[10px] font-extrabold uppercase tracking-wide text-white">
         <div className="px-1">Exercise</div>
         <div className="text-center">Weight</div>
         <div className="text-center">Sets</div>
@@ -43,8 +49,8 @@ export function SheetTable({ program, custom, onEdit, editing }: { program: Prog
             key={r.id}
             onClick={onEdit ? () => onEdit(r) : undefined}
             className={cn(
-              "grid grid-cols-[1fr_54px_54px_54px_54px] items-center border-t border-[#f2c9b0] text-[13px]",
-              tab ? "bg-mustard-500/85" : all ? "bg-teal-100" : "bg-white",
+              "grid grid-cols-[1fr_54px_54px_54px_54px] items-center border-t border-[#e9d5ff] text-[13px]",
+              tab ? "tabata-row" : all ? "all-row" : "bg-white",
               onEdit && "tap cursor-pointer"
             )}
           >
@@ -57,9 +63,9 @@ export function SheetTable({ program, custom, onEdit, editing }: { program: Prog
                 <span className="leading-tight">{rowName(r, custom)}</span>
               )}
             </div>
-            <div className={cn("self-stretch py-2.5 text-center", !tab && !all && "bg-[#efefef]")}>{r.weight}</div>
+            <div className={cn("self-stretch py-2.5 text-center font-bold", !tab && !all && "bg-[#f5f3ff]")}>{r.weight}</div>
             <div className="self-stretch py-2.5 text-center leading-tight">{r.sets}</div>
-            <div className={cn("self-stretch py-2.5 text-center leading-tight", !tab && !all && "bg-[#efefef]")}>{r.reps}</div>
+            <div className={cn("self-stretch py-2.5 text-center font-bold leading-tight", !tab && !all && "bg-[#f5f3ff]")}>{r.reps}</div>
             <div className="self-stretch py-2.5 text-center leading-tight">{r.rest}</div>
           </div>
         );
@@ -152,16 +158,29 @@ export default function ProgramDetail() {
       <div className="space-y-4 px-4 pt-1">
         {!editing && (
           <div className="flex items-center justify-between">
-            <Link href={prev ? `/programs/${prev.id}` : "#"} className={cn("tap grid h-11 w-14 place-items-center rounded-xl border-2 border-teal-100 bg-white text-xl", !prev && "opacity-30")}>←</Link>
+            <Link href={prev ? `/programs/${prev.id}` : "#"} className={cn("tap grid h-11 w-14 place-items-center rounded-xl border-2 border-teal-100 bg-white text-teal-700", !prev && "opacity-30")}><IconBack size={20} /></Link>
             <div className="text-center text-[11px] font-bold uppercase tracking-widest text-ink-mute">
               {program.source === "carolyn" ? "Carolyn's sheet" : "Your sheet"}
               {lastSessions[0] && <div className="text-teal-700">Last done {formatDate(lastSessions[0].startedAt)}</div>}
             </div>
-            <Link href={next ? `/programs/${next.id}` : "#"} className={cn("tap grid h-11 w-14 place-items-center rounded-xl border-2 border-teal-100 bg-white text-xl", !next && "opacity-30")}>→</Link>
+            <Link href={next ? `/programs/${next.id}` : "#"} className={cn("tap grid h-11 w-14 place-items-center rounded-xl border-2 border-teal-100 bg-white text-teal-700", !next && "opacity-30")}><IconNext size={20} /></Link>
           </div>
         )}
 
         {program.notes && !editing && <p className="rounded-xl bg-teal-50 px-3 py-2 text-sm text-teal-900">{program.notes}</p>}
+
+        {(program.photoIds?.length || editing) ? (
+          <div className={cn(editing && "card p-3")}>
+            {editing && (
+              <div className="mb-2 flex items-center justify-between">
+                <div className="text-[11px] font-extrabold uppercase tracking-widest text-ink-mute">Carolyn's sheet photo</div>
+                {program.photoIds?.length ? <span className="text-[11px] font-semibold text-ink-soft">Tap to zoom while you type</span> : null}
+              </div>
+            )}
+            {!editing && program.photoIds?.length ? <div className="mb-1 text-[11px] font-extrabold uppercase tracking-widest text-ink-mute">Carolyn's sheet</div> : null}
+            <SheetPhotos program={program} editing={editing} />
+          </div>
+        ) : null}
 
         <SheetTable program={working} custom={data.customExercises} editing={editing} onEdit={editing ? (r) => setRow(r) : undefined} />
 
@@ -181,12 +200,12 @@ export default function ProgramDetail() {
         ) : (
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="coral" size="lg" onClick={() => begin("guided45")}>⏱ 45-min guided</Button>
-              <Button size="lg" onClick={() => begin("free")}>Start & log</Button>
+              <Button variant="coral" size="lg" onClick={() => begin("guided45")}><IconTimer size={18} /> 45-min guided</Button>
+              <Button size="lg" onClick={() => begin("free")}><IconPlay size={16} /> Start & log</Button>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="secondary" onClick={() => setEditing(true)}>✎ Edit sheet</Button>
-              <Button variant="secondary" onClick={() => { const nid = actions.duplicateProgram(program.id); if (nid) nav(`/programs/${nid}/edit`); }}>⧉ Duplicate</Button>
+              <Button variant="secondary" onClick={() => setEditing(true)}><IconEdit size={16} /> Edit sheet</Button>
+              <Button variant="secondary" onClick={() => { const nid = actions.duplicateProgram(program.id); if (nid) nav(`/programs/${nid}/edit`); }}><IconCopy size={16} /> Duplicate</Button>
             </div>
           </div>
         )}
@@ -224,6 +243,9 @@ export default function ProgramDetail() {
         <div className="space-y-4">
           <Field label="Name"><input className={inputCls} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></Field>
           <Field label="Day / date label"><input className={inputCls} value={draft.dayLabel} onChange={(e) => setDraft({ ...draft, dayLabel: e.target.value })} placeholder="Thur 10 Sept" /></Field>
+          <Field label="Training day" hint="Used to file the sheet under the right week">
+            <input type="date" className={inputCls} value={toDateInput(draft.date ?? draft.createdAt)} onChange={(e) => { const ts = fromDateInput(e.target.value); if (ts) setDraft({ ...draft, date: ts, dayLabel: draft.dayLabel || sheetDayLabel(ts) }); }} />
+          </Field>
           <Field label="Number"><input type="number" className={inputCls} value={draft.number} onChange={(e) => setDraft({ ...draft, number: parseInt(e.target.value || "0", 10) })} /></Field>
           <Field label="Notes"><textarea className={inputCls} rows={3} value={draft.notes ?? ""} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></Field>
           <Button full onClick={() => setMeta(false)}>Done</Button>
@@ -257,7 +279,7 @@ function RowEditor({ row, custom, onSave, onDelete, onMove, onChangeExercise }: 
       <Field label="Slot on the sheet">
         <div className="flex flex-wrap gap-1.5">
           {SLOTS.map((s) => (
-            <button key={s} onClick={() => setR({ ...r, slot: s })} className={cn("tap rounded-lg px-3 py-1.5 text-sm font-bold", r.slot === s ? (s === "TABATA" ? "bg-mustard-500 text-ink" : "bg-teal-700 text-white") : "bg-white shadow-card text-ink-soft")}>
+            <button key={s} onClick={() => setR({ ...r, slot: s })} className={cn("tap rounded-lg px-3 py-1.5 text-sm font-bold text-white", r.slot === s ? (s === "TABATA" ? "bg-ink text-mustard-300" : s === "ALL" ? "grad-teal" : stationClass(parseInt(s, 10))) : "bg-white shadow-card !text-ink-soft")}>
               {s}
             </button>
           ))}

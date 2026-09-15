@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
-import type { AppData, Exercise, Profile, Program, WorkoutSession } from "./types";
+import type { AppData, BackupFile, Exercise, Profile, Program, WorkoutSession } from "./types";
+import { clearPhotos, deletePhoto, exportPhotos, importPhotos } from "./photos";
 import { CAROLYN_PROGRAMS } from "@/data/programs";
 
 const KEY = "counter.app.v1";
@@ -37,6 +38,12 @@ function load(): AppData {
     // Make sure any newly-added Carolyn programs appear for existing users.
     const have = new Set(parsed.programs.map((p) => p.id));
     for (const p of CAROLYN_PROGRAMS) if (!have.has(p.id)) parsed.programs.push({ ...p });
+    // Older saves have no `date` on Carolyn's sheets; backfill so week grouping works.
+    parsed.programs = parsed.programs.map((p) => {
+      if (p.date) return p;
+      const seeded = CAROLYN_PROGRAMS.find((c) => c.id === p.id);
+      return { ...p, date: seeded?.date ?? p.createdAt };
+    });
     return { ...seed(), ...parsed, profile: { ...defaultProfile, ...parsed.profile } };
   } catch {
     return seed();
@@ -91,7 +98,22 @@ export const actions = {
     });
   },
   deleteProgram(id: string) {
+    const victim = state.programs.find((p) => p.id === id);
     setState((s) => ({ ...s, programs: s.programs.filter((p) => p.id !== id) }));
+    victim?.photoIds?.forEach((pid) => void deletePhoto(pid));
+  },
+  addProgramPhoto(programId: string, photoId: string) {
+    setState((s) => ({
+      ...s,
+      programs: s.programs.map((p) => (p.id === programId ? { ...p, photoIds: [...(p.photoIds ?? []), photoId], updatedAt: Date.now() } : p)),
+    }));
+  },
+  removeProgramPhoto(programId: string, photoId: string) {
+    setState((s) => ({
+      ...s,
+      programs: s.programs.map((p) => (p.id === programId ? { ...p, photoIds: (p.photoIds ?? []).filter((x) => x !== photoId), updatedAt: Date.now() } : p)),
+    }));
+    void deletePhoto(photoId);
   },
   duplicateProgram(id: string): string | null {
     const src = state.programs.find((p) => p.id === id);
@@ -103,6 +125,8 @@ export const actions = {
       number: maxNum + 1,
       name: `${src.name} (copy)`,
       source: "custom",
+      photoIds: [],
+      date: Date.now(),
       rows: src.rows.map((r) => ({ ...r, id: uid() })),
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -113,7 +137,8 @@ export const actions = {
   resetCarolynProgram(id: string) {
     const original = CAROLYN_PROGRAMS.find((p) => p.id === id);
     if (!original) return;
-    setState((s) => ({ ...s, programs: s.programs.map((p) => (p.id === id ? { ...original } : p)) }));
+    // Keep any photo she attached to the sheet; only the rows/notes go back to the original.
+    setState((s) => ({ ...s, programs: s.programs.map((p) => (p.id === id ? { ...original, photoIds: p.photoIds ?? [] } : p)) }));
   },
   addCustomExercise(ex: Exercise) {
     setState((s) => ({ ...s, customExercises: [...s.customExercises, { ...ex, custom: true }] }));
@@ -144,22 +169,29 @@ export const actions = {
   deleteSession(id: string) {
     setState((s) => ({ ...s, sessions: s.sessions.filter((x) => x.id !== id) }));
   },
-  importData(json: string): { ok: boolean; message: string } {
+  async importData(json: string): Promise<{ ok: boolean; message: string }> {
     try {
-      const parsed = JSON.parse(json) as AppData;
+      const parsed = JSON.parse(json) as BackupFile;
       if (!parsed || parsed.version !== 1 || !Array.isArray(parsed.programs)) {
         return { ok: false, message: "That file doesn't look like a Counter backup." };
       }
-      setState(() => ({ ...seed(), ...parsed, profile: { ...defaultProfile, ...parsed.profile } }));
-      return { ok: true, message: "Backup restored." };
+      const { photos, ...data } = parsed;
+      await importPhotos(photos);
+      setState(() => ({ ...seed(), ...data, profile: { ...defaultProfile, ...data.profile } }));
+      const n = photos ? Object.keys(photos).length : 0;
+      return { ok: true, message: n ? `Backup restored, including ${n} sheet photo${n === 1 ? "" : "s"}.` : "Backup restored." };
     } catch {
       return { ok: false, message: "Could not read that file." };
     }
   },
-  exportData(): string {
-    return JSON.stringify(state, null, 2);
+  async exportData(): Promise<string> {
+    const ids = state.programs.flatMap((p) => p.photoIds ?? []);
+    const photos = await exportPhotos(ids);
+    const file: BackupFile = { ...state, photos };
+    return JSON.stringify(file, null, 2);
   },
   resetAll() {
+    void clearPhotos();
     setState(() => seed());
   },
 };

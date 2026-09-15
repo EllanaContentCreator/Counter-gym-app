@@ -113,6 +113,57 @@ export function weekStart(ts = Date.now()) {
   return d.getTime();
 }
 
+/** The date a sheet belongs to: its training day, or when it was created. */
+export function programDate(p: Program) {
+  return p.date ?? p.createdAt;
+}
+
+export function programsThisWeek(programs: Program[]) {
+  const start = weekStart();
+  const end = start + 7 * 864e5;
+  return programs.filter((p) => programDate(p) >= start && programDate(p) < end).sort((a, b) => programDate(a) - programDate(b));
+}
+
+/** Group sheets by (Monday-based) week, newest week first, sheets in date order inside a week. */
+export function programsByWeek(programs: Program[]): { start: number; programs: Program[] }[] {
+  const map = new Map<number, Program[]>();
+  for (const p of programs) {
+    const k = weekStart(programDate(p));
+    map.set(k, [...(map.get(k) ?? []), p]);
+  }
+  return [...map.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .map(([start, list]) => ({ start, programs: list.sort((a, b) => programDate(a) - programDate(b) || a.number - b.number) }));
+}
+
+export function weekLabel(start: number) {
+  const now = weekStart();
+  if (start === now) return "This week";
+  if (start === now - 7 * 864e5) return "Last week";
+  const end = start + 6 * 864e5;
+  const a = new Date(start), b = new Date(end);
+  const sameMonth = a.getMonth() === b.getMonth();
+  return `${a.getDate()}${sameMonth ? "" : " " + a.toLocaleDateString("en-AU", { month: "short" })} – ${b.getDate()} ${b.toLocaleDateString("en-AU", { month: "short" })}`;
+}
+
+/** "Tues 15 Sept" — the way Carolyn writes the day on her sheets. */
+export function sheetDayLabel(ts: number) {
+  const d = new Date(ts);
+  const wd = ["Sun", "Mon", "Tues", "Wed", "Thur", "Fri", "Sat"][d.getDay()];
+  const mo = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"][d.getMonth()];
+  return `${wd} ${d.getDate().toString().padStart(2, "0")} ${mo}`;
+}
+
+/** Local YYYY-MM-DD ⇄ ms, for <input type="date"> */
+export function toDateInput(ts: number) {
+  return dayKey(ts);
+}
+export function fromDateInput(v: string): number | null {
+  const m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return null;
+  return new Date(+m[1], +m[2] - 1, +m[3], 12).getTime();
+}
+
 export function sessionsThisWeek(sessions: WorkoutSession[]) {
   const start = weekStart();
   return sessions.filter((s) => s.finishedAt && s.startedAt >= start);

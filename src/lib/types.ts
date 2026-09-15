@@ -54,8 +54,21 @@ export interface Program {
   rows: ProgramRow[];
   source: "carolyn" | "custom";
   notes?: string;
+  /** The training day this sheet was handed out for (ms). Used to group sheets by week. */
+  date?: number;
+  /** Photos / screenshots of the original sheet, stored in IndexedDB. */
+  photoIds?: string[];
   createdAt: number;
   updatedAt: number;
+}
+
+/** A photo of one of Carolyn's sheets (the bytes live in IndexedDB, not localStorage). */
+export interface SheetPhoto {
+  id: string;
+  blob: Blob;
+  width: number;
+  height: number;
+  createdAt: number;
 }
 
 export interface SetEntry {
@@ -107,4 +120,9 @@ export interface AppData {
   /** Per-exercise last-used weight text, for quick prefill */
   lastWeights: Record<string, string>;
   favourites: string[];
+}
+
+/** Shape of an exported backup file: app data plus the sheet photos as data URLs. */
+export interface BackupFile extends AppData {
+  photos?: Record<string, string>;
 }
