@@ -49,7 +49,7 @@ export function SheetTable({ program, custom, onEdit, editing }: { program: Prog
             key={r.id}
             onClick={onEdit ? () => onEdit(r) : undefined}
             className={cn(
-              "grid grid-cols-[1fr_54px_54px_54px_54px] items-center border-t border-[#f2c9b0] text-[13px]",
+              "grid grid-cols-[1fr_54px_54px_54px_54px] items-center border-t border-[#e9d5ff] text-[13px]",
               tab ? "tabata-row" : all ? "all-row" : "bg-white",
               onEdit && "tap cursor-pointer"
             )}
@@ -63,9 +63,9 @@ export function SheetTable({ program, custom, onEdit, editing }: { program: Prog
                 <span className="leading-tight">{rowName(r, custom)}</span>
               )}
             </div>
-            <div className={cn("self-stretch py-2.5 text-center font-bold", !tab && !all && "bg-[#f3f1ee]")}>{r.weight}</div>
+            <div className={cn("self-stretch py-2.5 text-center font-bold", !tab && !all && "bg-[#f5f3ff]")}>{r.weight}</div>
             <div className="self-stretch py-2.5 text-center leading-tight">{r.sets}</div>
-            <div className={cn("self-stretch py-2.5 text-center font-bold leading-tight", !tab && !all && "bg-[#f3f1ee]")}>{r.reps}</div>
+            <div className={cn("self-stretch py-2.5 text-center font-bold leading-tight", !tab && !all && "bg-[#f5f3ff]")}>{r.reps}</div>
             <div className="self-stretch py-2.5 text-center leading-tight">{r.rest}</div>
           </div>
         );

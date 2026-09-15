@@ -117,9 +117,9 @@ export function GoalRing({ value, max, size = 92, stroke = 9, children, classNam
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
         <defs>
           <linearGradient id="ring-grad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#ffd36a" />
-            <stop offset="0.6" stopColor="#f97360" />
-            <stop offset="1" stopColor="#ff8a75" />
+            <stop offset="0" stopColor="#fcd34d" />
+            <stop offset="0.6" stopColor="#ec4899" />
+            <stop offset="1" stopColor="#22d3ee" />
           </linearGradient>
         </defs>
         <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(255,255,255,0.22)" strokeWidth={stroke} fill="none" />

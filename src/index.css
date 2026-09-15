@@ -1,42 +1,42 @@
 @import "tailwindcss";
 
 @theme {
-  --color-teal-900: #083f3b;
-  --color-teal-800: #0b5d56;
-  --color-teal-700: #0f766e;
-  --color-teal-600: #12968c;
-  --color-teal-500: #14b8a6;
-  --color-teal-300: #5ee0d0;
-  --color-teal-100: #cdeeea;
-  --color-teal-50: #ecf8f6;
-  --color-coral-700: #c43f2b;
-  --color-coral-600: #e0553f;
-  --color-coral-500: #f97360;
-  --color-coral-300: #ffa595;
-  --color-coral-100: #fde3dd;
-  --color-mustard-600: #d99a00;
-  --color-mustard-500: #f5b301;
-  --color-mustard-300: #ffd36a;
-  --color-mustard-100: #fff1c2;
-  --color-plum-700: #6d3fb5;
-  --color-plum-500: #8b5cf6;
-  --color-plum-100: #ece4fb;
-  --color-sky-600: #2f6fb5;
-  --color-sky-500: #4a8fd9;
-  --color-sky-100: #dcebfb;
-  --color-lime-500: #7cc242;
-  --color-lime-100: #e8f6d9;
-  --color-cream: #fbf7f2;
-  --color-sand: #f1eae2;
-  --color-sand-deep: #e6dccf;
-  --color-ink: #1f2a2e;
-  --color-ink-soft: #566369;
-  --color-ink-mute: #8a959a;
+  --color-teal-900: #2e1065;
+  --color-teal-800: #4c1d95;
+  --color-teal-700: #6d28d9;
+  --color-teal-600: #7c3aed;
+  --color-teal-500: #8b5cf6;
+  --color-teal-300: #c4b5fd;
+  --color-teal-100: #ede9fe;
+  --color-teal-50: #f5f3ff;
+  --color-coral-700: #be185d;
+  --color-coral-600: #db2777;
+  --color-coral-500: #ec4899;
+  --color-coral-300: #f9a8d4;
+  --color-coral-100: #fce7f3;
+  --color-mustard-600: #d97706;
+  --color-mustard-500: #f59e0b;
+  --color-mustard-300: #fcd34d;
+  --color-mustard-100: #fef3c7;
+  --color-plum-700: #0e7490;
+  --color-plum-500: #06b6d4;
+  --color-plum-100: #cffafe;
+  --color-sky-600: #2563eb;
+  --color-sky-500: #3b82f6;
+  --color-sky-100: #dbeafe;
+  --color-lime-500: #84cc16;
+  --color-lime-100: #ecfccb;
+  --color-cream: #faf7ff;
+  --color-sand: #efeafb;
+  --color-sand-deep: #ddd3f5;
+  --color-ink: #1e1b4b;
+  --color-ink-soft: #4c4a73;
+  --color-ink-mute: #8683a6;
   --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: "Bebas Neue", "Manrope", ui-sans-serif, system-ui, sans-serif;
-  --shadow-card: 0 1px 2px rgba(31, 42, 46, 0.04), 0 8px 24px -8px rgba(15, 118, 110, 0.14);
-  --shadow-pop: 0 12px 32px -8px rgba(15, 118, 110, 0.35);
-  --shadow-coral: 0 10px 28px -8px rgba(249, 115, 96, 0.55);
+  --shadow-card: 0 1px 2px rgba(30, 27, 75, 0.05), 0 8px 24px -8px rgba(109, 40, 217, 0.18);
+  --shadow-pop: 0 12px 32px -8px rgba(109, 40, 217, 0.45);
+  --shadow-coral: 0 10px 28px -8px rgba(236, 72, 153, 0.55);
 }
 
 html, body, #root { height: 100%; }
@@ -44,9 +44,9 @@ html { background: var(--color-cream); -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   background:
-    radial-gradient(900px 500px at -10% -10%, rgba(20, 184, 166, 0.14), transparent 60%),
-    radial-gradient(700px 420px at 110% 0%, rgba(249, 115, 96, 0.12), transparent 60%),
-    radial-gradient(600px 400px at 50% 110%, rgba(245, 179, 1, 0.10), transparent 60%),
+    radial-gradient(900px 500px at -10% -10%, rgba(124, 58, 237, 0.20), transparent 60%),
+    radial-gradient(700px 420px at 110% 0%, rgba(236, 72, 153, 0.18), transparent 60%),
+    radial-gradient(600px 400px at 50% 110%, rgba(6, 182, 212, 0.16), transparent 60%),
     var(--color-cream);
   background-attachment: fixed;
   color: var(--color-ink);
@@ -76,16 +76,16 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .safe-top { padding-top: env(safe-area-inset-top, 0px); }
 
 /* Gradient fills — the "fancy" layer */
-.grad-teal { background-image: linear-gradient(135deg, #0b5d56 0%, #0f766e 45%, #14b8a6 100%); }
-.grad-teal-deep { background-image: linear-gradient(160deg, #083f3b 0%, #0f766e 60%, #12968c 100%); }
-.grad-coral { background-image: linear-gradient(135deg, #e0553f 0%, #f97360 55%, #ffa595 100%); }
-.grad-sun { background-image: linear-gradient(135deg, #f5b301 0%, #ffd36a 100%); }
-.grad-plum { background-image: linear-gradient(135deg, #6d3fb5 0%, #8b5cf6 100%); }
-.grad-sky { background-image: linear-gradient(135deg, #2f6fb5 0%, #4a8fd9 100%); }
-.grad-lime { background-image: linear-gradient(135deg, #5ea52c 0%, #7cc242 100%); }
-.grad-ink { background-image: linear-gradient(160deg, #1f2a2e 0%, #2d3b41 100%); }
-.grad-text { background-image: linear-gradient(90deg, #0f766e, #14b8a6 55%, #f97360); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.illo-bg { background-image: radial-gradient(120% 90% at 50% 100%, rgba(20, 184, 166, 0.18), transparent 60%), linear-gradient(180deg, #fff7ee 0%, #f6efe6 100%); }
+.grad-teal { background-image: linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #a855f7 100%); }
+.grad-teal-deep { background-image: linear-gradient(160deg, #1e1b4b 0%, #4c1d95 45%, #7c3aed 85%, #db2777 100%); }
+.grad-coral { background-image: linear-gradient(135deg, #db2777 0%, #ec4899 50%, #fb7185 100%); }
+.grad-sun { background-image: linear-gradient(135deg, #f59e0b 0%, #fcd34d 100%); }
+.grad-plum { background-image: linear-gradient(135deg, #0e7490 0%, #06b6d4 100%); }
+.grad-sky { background-image: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%); }
+.grad-lime { background-image: linear-gradient(135deg, #65a30d 0%, #a3e635 100%); }
+.grad-ink { background-image: linear-gradient(160deg, #1e1b4b 0%, #312e81 100%); }
+.grad-text { background-image: linear-gradient(90deg, #6d28d9, #ec4899 55%, #f59e0b); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.illo-bg { background-image: radial-gradient(120% 90% at 50% 100%, rgba(236, 72, 153, 0.16), transparent 60%), radial-gradient(90% 70% at 10% 0%, rgba(124, 58, 237, 0.16), transparent 60%), linear-gradient(180deg, #fdf8ff 0%, #f3edff 100%); }
 
 /* Dotted texture for hero panels (overlay, so it stacks on top of a gradient) */
 .dots { position: relative; }
@@ -102,14 +102,14 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 }
 
 /* Station colours (1 sky, 2 plum, 3 coral, 4 lime) */
-.station-1 { background-image: linear-gradient(135deg, #2f6fb5, #4a8fd9); }
-.station-2 { background-image: linear-gradient(135deg, #6d3fb5, #8b5cf6); }
-.station-3 { background-image: linear-gradient(135deg, #e0553f, #f97360); }
-.station-4 { background-image: linear-gradient(135deg, #5ea52c, #7cc242); }
-.station-x { background-image: linear-gradient(135deg, #566369, #8a959a); }
+.station-1 { background-image: linear-gradient(135deg, #0891b2, #22d3ee); }
+.station-2 { background-image: linear-gradient(135deg, #6d28d9, #a855f7); }
+.station-3 { background-image: linear-gradient(135deg, #db2777, #f472b6); }
+.station-4 { background-image: linear-gradient(135deg, #65a30d, #a3e635); }
+.station-x { background-image: linear-gradient(135deg, #4c4a73, #8683a6); }
 
-.tabata-row { background-image: linear-gradient(90deg, #ffd36a 0%, #f5b301 100%); }
-.all-row { background-image: linear-gradient(90deg, #cdeeea 0%, #a9e2db 100%); }
+.tabata-row { background-image: linear-gradient(90deg, #fde68a 0%, #fbbf24 100%); }
+.all-row { background-image: linear-gradient(90deg, #cffafe 0%, #a5f3fc 100%); }
 
 @keyframes pulse-ring { 0% { transform: scale(0.95); opacity: 0.8; } 100% { transform: scale(1.25); opacity: 0; } }
 .pulse-ring::after { content: ""; position: absolute; inset: 0; border-radius: 9999px; border: 3px solid currentColor; animation: pulse-ring 1s ease-out infinite; }

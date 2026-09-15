@@ -79,11 +79,11 @@ export default function ExerciseDetail() {
             <div className="mt-2 h-44">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chart} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-                  <CartesianGrid stroke="#f1eae2" vertical={false} />
-                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#8a959a" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: "#8a959a" }} axisLine={false} tickLine={false} />
+                  <CartesianGrid stroke="#efeafb" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#8683a6" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: "#8683a6" }} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", fontSize: 12 }} />
-                  <Line type="monotone" dataKey="top" stroke="#0f766e" strokeWidth={3} dot={{ r: 4, fill: "#f97360", strokeWidth: 0 }} />
+                  <Line type="monotone" dataKey="top" stroke="#7c3aed" strokeWidth={3} dot={{ r: 4, fill: "#ec4899", strokeWidth: 0 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

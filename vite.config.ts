@@ -16,8 +16,8 @@ export default defineConfig({
         short_name: "Counter",
         description:
           "Carolyn Counter's training programs in your pocket. Log your weights, count your reps, stay accountable.",
-        theme_color: "#0F766E",
-        background_color: "#FBF7F2",
+        theme_color: "#6D28D9",
+        background_color: "#FAF7FF",
         display: "standalone",
         orientation: "portrait",
         start_url: "/",

@@ -40,8 +40,8 @@ export function regionWeights(muscles: MuscleGroup[]) {
 }
 
 function Base({ back }: { back?: boolean }) {
-  const fill = "#e9dfd2";
-  const stroke = "#d3c4b1";
+  const fill = "#e6e0f7";
+  const stroke = "#cdc3ec";
   const limb = { stroke: fill, strokeLinecap: "round" as const, fill: "none" };
   return (
     <g>
@@ -64,7 +64,7 @@ function Base({ back }: { back?: boolean }) {
       <ellipse cx={back ? 64 : 66} cy="183" rx="6.5" ry="3.5" fill={fill} />
       {/* subtle midline */}
       {!back && <path d="M50 34 V100" stroke="#fff" strokeOpacity="0.5" strokeWidth="0.8" />}
-      {back && <path d="M50 34 V100" stroke="#d3c4b1" strokeOpacity="0.7" strokeWidth="0.8" />}
+      {back && <path d="M50 34 V100" stroke="#cdc3ec" strokeOpacity="0.7" strokeWidth="0.8" />}
     </g>
   );
 }
@@ -110,8 +110,8 @@ function Figure({ back, weights, uid }: { back: boolean; weights: Partial<Record
     <svg viewBox="0 0 100 200" className="h-full w-auto" aria-hidden>
       <defs>
         <linearGradient id={`mm-g-${uid}`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#ff8a75" />
-          <stop offset="1" stopColor="#e0553f" />
+          <stop offset="0" stopColor="#fb7185" />
+          <stop offset="1" stopColor="#c026d3" />
         </linearGradient>
         <filter id={`mm-glow-${uid}`} x="-40%" y="-40%" width="180%" height="180%">
           <feGaussianBlur stdDeviation="2.2" />
@@ -119,7 +119,7 @@ function Figure({ back, weights, uid }: { back: boolean; weights: Partial<Record
       </defs>
       <Base back={back} />
       {regions.map((r) => (
-        <g key={r + "-glow"} opacity={(weights[r] ?? 0) * 0.55} fill="#f97360" stroke="#f97360" filter={`url(#mm-glow-${uid})`}>
+        <g key={r + "-glow"} opacity={(weights[r] ?? 0) * 0.55} fill="#ec4899" stroke="#ec4899" filter={`url(#mm-glow-${uid})`}>
           <Shapes region={r} back={back} />
         </g>
       ))}
