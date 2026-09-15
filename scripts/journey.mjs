@@ -21,11 +21,11 @@ await page.getByPlaceholder("Lana").fill("Lana");
 await page.getByRole("button", { name: "3", exact: true }).click();
 await page.getByRole("button", { name: "Start counting" }).click(); await w(800);
 ok("onboarding → Today greets Lana", await page.getByText(/Good (morning|afternoon|evening), Lana/).isVisible());
-ok("weekly goal 3 shown", await page.getByText("0/3").isVisible());
+ok("weekly goal 3 shown", await page.getByText("0/3").first().isVisible());
 await shot("01-today");
 
 // 2. Edit a program sheet
-await page.getByRole("link", { name: /Programs/ }).first().click(); await w();
+await page.getByRole("link", { name: /Sheets/ }).first().click(); await w();
 await page.getByText("Program #02").first().click(); await w();
 ok("program 02 shows deadlift", await page.getByText("Deadlift (20kg Bar)").isVisible());
 await page.getByRole("button", { name: "Edit sheet" }).click(); await w();
@@ -129,7 +129,7 @@ await page.getByRole("button", { name: "lb", exact: true }).click(); await w();
 await page.goto(base + "#/library/seated-row-machine"); await w();
 ok("unit switched to lb", await page.getByText("Best lb").isVisible());
 await page.getByRole("link", { name: /Me/ }).first().click(); await w(600);
-await page.getByRole("button", { name: "kg", exact: true }).click(); await w();
+await page.getByText("kg", { exact: true }).click(); await w();
 
 // 9. Active workout banner
 await page.goto(base + "#/programs/carolyn-03"); await w();
@@ -139,7 +139,7 @@ ok("active workout banner on Today", await page.getByText("Workout in progress")
 await shot("09-banner");
 await page.getByText("Workout in progress").click(); await w();
 await page.getByText("Discard workout").click(); await w();
-await page.getByRole("button", { name: "Discard" }).click(); await w();
+await page.getByRole("button", { name: "Discard", exact: true }).click(); await w();
 ok("discard returns home", await page.getByText(/Good (morning|afternoon|evening), Lana/).isVisible());
 
 console.log("\nERRORS:", errors.length ? "\n" + errors.join("\n") : "none");

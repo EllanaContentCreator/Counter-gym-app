@@ -1,13 +1,14 @@
 import { Link } from "wouter";
 import type { ReactNode } from "react";
+import { IconBack, IconTimer } from "./Icons";
 
 export function Header({ title, back, right, sub }: { title: ReactNode; back?: string; right?: ReactNode; sub?: ReactNode }) {
   return (
-    <header className="safe-top sticky top-0 z-30 bg-cream/95 backdrop-blur">
+    <header className="safe-top sticky top-0 z-30 glass">
       <div className="flex items-center gap-3 px-4 pt-3 pb-2">
         {back && (
           <Link href={back} aria-label="Back" className="tap grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-teal-700 shadow-card">
-            ←
+            <IconBack size={20} />
           </Link>
         )}
         <div className="min-w-0 flex-1">
@@ -22,8 +23,8 @@ export function Header({ title, back, right, sub }: { title: ReactNode; back?: s
 
 export function TimerButton() {
   return (
-    <Link href="/timer" aria-label="Timer" className="tap grid h-10 w-10 place-items-center rounded-full bg-white text-xl shadow-card">
-      ⏱️
+    <Link href="/timer" aria-label="Timer" className="tap grid h-10 w-10 place-items-center rounded-full bg-white text-teal-700 shadow-card">
+      <IconTimer size={21} />
     </Link>
   );
 }

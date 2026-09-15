@@ -47,7 +47,13 @@ export default function Progress() {
                 <XAxis dataKey="label" tick={{ fontSize: 9, fill: "#8a959a" }} axisLine={false} tickLine={false} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: "#8a959a" }} axisLine={false} tickLine={false} />
                 <Tooltip cursor={{ fill: "#ecf8f6" }} contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", fontSize: 12 }} />
-                <Bar dataKey="count" name="Workouts" fill="#0f766e" radius={[6, 6, 0, 0]} />
+                <defs>
+                  <linearGradient id="bar-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stopColor="#14b8a6" />
+                    <stop offset="1" stopColor="#0b5d56" />
+                  </linearGradient>
+                </defs>
+                <Bar dataKey="count" name="Workouts" fill="url(#bar-grad)" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -55,7 +61,7 @@ export default function Progress() {
 
         <div className="flex gap-2">
           {(["history", "pbs"] as const).map((t) => (
-            <button key={t} onClick={() => setTab(t)} className={cn("tap rounded-full px-4 py-2 text-sm font-bold", tab === t ? "bg-teal-700 text-white" : "bg-white text-ink-soft shadow-card")}>{t === "history" ? "History" : "Personal bests"}</button>
+            <button key={t} onClick={() => setTab(t)} className={cn("tap rounded-full px-4 py-2 text-sm font-bold", tab === t ? "grad-teal text-white shadow-[var(--shadow-pop)]" : "bg-white text-ink-soft shadow-card")}>{t === "history" ? "History" : "Personal bests"}</button>
           ))}
         </div>
 

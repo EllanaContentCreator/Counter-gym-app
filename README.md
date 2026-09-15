@@ -8,6 +8,12 @@ weight and rep stored on the device.
 
 ## What it does
 
+- **Weekly sheets** — Carolyn hands out two sheets a week. Tap **Add this week's sheet**, snap the paper sheet
+  (or add the screenshot she sends), and it becomes a new numbered program with the photo attached. Sheets are
+  filed by week with a 2-of-2 tracker on Today; the photo opens full-screen with pinch-zoom so you can type the
+  rows in while reading from it. Photos live in IndexedDB on the phone and are included in backups.
+- **Exercise diagrams** — every exercise has a front/back muscle map (main muscle bright, helpers softer) and a
+  step-by-step form diagram built from its cues, alongside the illustration.
 - **Programs** — Carolyn's sheets (#01–#04) are pre-loaded in her exact format: stations `1`, `1+` (superset),
   `2`, `3`, `4`, plus `ALL` rows and yellow `TABATA` finishers, with Weight / Sets / Reps / Rest columns.
   Edit any row, add exercises, reorder, duplicate a sheet, or create your own.
@@ -38,7 +44,13 @@ npm install
 npm run dev        # http://localhost:5173
 npm run build      # production build in dist/
 npm run preview    # serve the build locally
+node scripts/journey.mjs   # end-to-end check against `vite preview --port 4174`
 ```
+
+### Replacing or adding exercise illustrations
+
+Drop 1:1 PNGs named after the exercise's `image` key into `public/exercises/` and run `node scripts/webp.mjs`
+to produce the 640×640 `.webp` files the app uses. Exercises without an illustration show their muscle map.
 
 Deploy the `dist/` folder to any static host (Netlify, Vercel, Cloudflare Pages, GitHub Pages).
 Then on the phone: Safari → Share → **Add to Home Screen** (iPhone) or browser menu → **Install app** (Android).
@@ -51,6 +63,10 @@ counter/
   src/data/equipment.ts    equipment list + muscle labels
   src/data/programs.ts     Carolyn's seeded programs
   src/lib/store.ts         local-first state (localStorage) + actions
+  src/lib/photos.ts        sheet photos in IndexedDB (compress, store, object-URL cache, backup)
+  src/components/MuscleMap.tsx, FormDiagram.tsx   exercise diagrams
+  src/components/AddSheet.tsx, SheetPhotos.tsx, PhotoViewer.tsx   weekly sheet photo flow
+  public/fonts/*           self-hosted Manrope + Bebas Neue (works offline)
   src/lib/timer.ts         countdown / stopwatch / beeps / wake lock
   src/pages/*              Today, Programs, ProgramDetail, Library, ExerciseDetail,
                            Workout (logging + guided 45), Progress, SessionDetail, Timer, Settings, Onboarding
@@ -60,6 +76,7 @@ counter/
 
 ## Adding a new program from one of Carolyn's sheets
 
-Either use **Programs → Add new workout** in the app, or add an entry to `src/data/programs.ts` using the
+The everyday way is **Today → Add this week's sheet** (photo first, then type the rows). To seed one for
+everyone, add an entry to `src/data/programs.ts` (with a `date`) using the
 `row(id, slot, exerciseId, weight, sets, reps, rest, label?)` helper. Slots are strings exactly as on the sheet
 (`"1"`, `"1+"`, `"TABATA"`, `"ALL"`). Existing users pick up new seeded programs automatically.

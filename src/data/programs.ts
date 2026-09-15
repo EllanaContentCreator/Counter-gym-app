@@ -11,7 +11,8 @@ const row = (
   label?: string
 ): ProgramRow => ({ id, slot, exerciseId, weight, sets, reps, rest, label });
 
-const T0 = 1756684800000; // 1 Sept 2026
+const T0 = Date.UTC(2026, 8, 1, 2); // Tues 1 Sept 2026 (noon-ish AEST)
+const day = (n: number) => T0 + n * 864e5;
 
 /** Carolyn Counter's programs, transcribed from her training sheets. */
 export const CAROLYN_PROGRAMS: Program[] = [
@@ -21,6 +22,7 @@ export const CAROLYN_PROGRAMS: Program[] = [
     name: "Program #01",
     dayLabel: "Tues 01 Sept",
     source: "carolyn",
+    date: day(0),
     createdAt: T0,
     updatedAt: T0,
     notes: "4 stations × 3 rounds, then TABATA to finish. Station 1 is a superset.",
@@ -40,8 +42,9 @@ export const CAROLYN_PROGRAMS: Program[] = [
     name: "Program #02",
     dayLabel: "Thur 03 Sept",
     source: "carolyn",
-    createdAt: T0 + 2 * 864e5,
-    updatedAt: T0 + 2 * 864e5,
+    date: day(2),
+    createdAt: day(2),
+    updatedAt: day(2),
     notes: "Deadlift day. The TABATA is a 4-move dumbbell leg circuit, left then right.",
     rows: [
       row("c02-1", "1", "deadlift-bar", "15", "each side", "10", "big plate"),
@@ -67,8 +70,9 @@ export const CAROLYN_PROGRAMS: Program[] = [
     name: "Program #03",
     dayLabel: "Tues 08 Sept",
     source: "carolyn",
-    createdAt: T0 + 7 * 864e5,
-    updatedAt: T0 + 7 * 864e5,
+    date: day(7),
+    createdAt: day(7),
+    updatedAt: day(7),
     notes: "Two blocks of four machines with the box split squat in the middle for everyone.",
     rows: [
       row("c03-1", "1", "seated-leg-press", "72", "", "10"),
@@ -88,8 +92,9 @@ export const CAROLYN_PROGRAMS: Program[] = [
     name: "Program #04",
     dayLabel: "Thur 10 Sept",
     source: "carolyn",
-    createdAt: T0 + 9 * 864e5,
-    updatedAt: T0 + 9 * 864e5,
+    date: day(9),
+    createdAt: day(9),
+    updatedAt: day(9),
     notes: "Hex bar day. Stations 1 and 4 are supersets. Two TABATAs to finish.",
     rows: [
       row("c04-1", "1", "hex-bar-squat", "5 + 10+5", "each side", "10"),

@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useAppData, actions } from "@/lib/store";
 import { Header } from "@/components/Header";
 import { Button, Card, Field, Sheet, inputCls, cnHelper } from "@/components/ui";
+import { IconImage } from "@/components/Icons";
 
 export default function Settings() {
   const data = useAppData();
@@ -11,8 +12,11 @@ export default function Settings() {
   const [confirmReset, setConfirmReset] = useState(false);
   const isStandalone = typeof window !== "undefined" && (window.matchMedia("(display-mode: standalone)").matches || (navigator as { standalone?: boolean }).standalone);
 
+  const [busy, setBusy] = useState(false);
+  const photoCount = data.programs.reduce((a, p) => a + (p.photoIds?.length ?? 0), 0);
   const exportBackup = async () => {
-    const json = actions.exportData();
+    setBusy(true);
+    const json = await actions.exportData().finally(() => setBusy(false));
     const name = `counter-backup-${new Date().toISOString().slice(0, 10)}.json`;
     const file = new File([json], name, { type: "application/json" });
     try {
@@ -24,7 +28,8 @@ export default function Settings() {
   };
   const importBackup = async (f: File | undefined) => {
     if (!f) return;
-    const res = actions.importData(await f.text());
+    setBusy(true);
+    const res = await actions.importData(await f.text()).finally(() => setBusy(false));
     setMsg(res.message);
   };
 
@@ -53,9 +58,10 @@ export default function Settings() {
         <Card className="space-y-3">
           <div className="display text-[22px]">Backup</div>
           <p className="text-sm text-ink-soft">Everything lives on this phone. Export a backup now and then, or to move your history to a new phone.</p>
+          <div className="flex items-center gap-2 rounded-xl bg-sand px-3 py-2 text-xs font-semibold text-ink-soft"><IconImage size={16} /> {photoCount} sheet photo{photoCount === 1 ? "" : "s"} will be included in the backup.</div>
           <div className="grid grid-cols-2 gap-2">
-            <Button onClick={exportBackup}>Export backup</Button>
-            <Button variant="secondary" onClick={() => fileRef.current?.click()}>Restore backup</Button>
+            <Button onClick={exportBackup} disabled={busy}>{busy ? "Working…" : "Export backup"}</Button>
+            <Button variant="secondary" onClick={() => fileRef.current?.click()} disabled={busy}>Restore backup</Button>
           </div>
           <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => importBackup(e.target.files?.[0])} />
           {msg && <p className="text-sm font-bold text-teal-700">{msg}</p>}
@@ -72,13 +78,13 @@ export default function Settings() {
         <Card className="space-y-2">
           <div className="display text-[22px]">About Counter</div>
           <p className="text-sm text-ink-soft">Counter is built on the training sheets of <b>Carolyn Counter</b>: four stations, three rounds, a tabata to finish, and every weight written down. She's retired; the accountability isn't. Count it. Own it.</p>
-          <p className="text-xs text-ink-mute">Version 1.0 · Your data never leaves your device.</p>
+          <p className="text-xs text-ink-mute">Version 1.1 · Your data never leaves your device.</p>
         </Card>
 
         <Button full variant="danger" onClick={() => setConfirmReset(true)}>Reset everything</Button>
       </div>
       <Sheet open={confirmReset} onClose={() => setConfirmReset(false)} title="Reset everything?">
-        <p className="text-sm text-ink-soft">This deletes your history, custom exercises and edits to programs. Carolyn's original sheets stay. Export a backup first if you're not sure.</p>
+        <p className="text-sm text-ink-soft">This deletes your history, custom exercises, sheet photos and edits to programs. Carolyn's original sheets stay. Export a backup first if you're not sure.</p>
         <div className="mt-4 grid grid-cols-2 gap-2">
           <Button variant="secondary" onClick={() => setConfirmReset(false)}>Cancel</Button>
           <Button variant="danger" onClick={() => { actions.resetAll(); setConfirmReset(false); }}>Reset</Button>

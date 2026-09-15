@@ -10,7 +10,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["icons/*.png", "icons/*.svg", "exercises/*"],
+      includeAssets: ["icons/*.png", "icons/*.svg", "exercises/*", "fonts/*"],
       manifest: {
         name: "Counter — Accountability Training",
         short_name: "Counter",

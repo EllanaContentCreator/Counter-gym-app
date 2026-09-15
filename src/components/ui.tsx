@@ -10,12 +10,12 @@ export function Button({
   const base = "tap inline-flex items-center justify-center gap-2 rounded-2xl font-bold transition disabled:opacity-40 disabled:pointer-events-none";
   const sizes = { sm: "px-3 py-2 text-sm", md: "px-4 py-3 text-[15px]", lg: "px-5 py-4 text-base" };
   const variants = {
-    primary: "bg-teal-700 text-white shadow-[0_6px_18px_rgba(15,118,110,0.25)] active:bg-teal-900",
-    secondary: "bg-white text-teal-700 border-2 border-teal-100 active:bg-teal-50",
+    primary: "grad-teal text-white shadow-[var(--shadow-pop)] active:brightness-95",
+    secondary: "bg-white/90 text-teal-700 border-2 border-teal-100 active:bg-teal-50",
     ghost: "bg-transparent text-teal-700 active:bg-teal-50",
     danger: "bg-coral-100 text-coral-600 active:bg-coral-500 active:text-white",
-    coral: "bg-coral-500 text-white shadow-[0_6px_18px_rgba(249,115,96,0.3)] active:bg-coral-600",
-    mustard: "bg-mustard-500 text-ink active:bg-mustard-100",
+    coral: "grad-coral text-white shadow-[var(--shadow-coral)] active:brightness-95",
+    mustard: "grad-sun text-ink shadow-[0_8px_20px_-6px_rgba(245,179,1,0.6)] active:brightness-95",
   };
   return (
     <button type={type} disabled={disabled} onClick={onClick} className={cn(base, sizes[size], variants[variant], full && "w-full", className)}>
@@ -94,20 +94,49 @@ export function Sheet({ open, onClose, title, children, tall }: { open: boolean;
   );
 }
 
-export function Stat({ value, label, tone = "teal" }: { value: ReactNode; label: string; tone?: "teal" | "coral" | "mustard" | "ink" }) {
-  const tones = { teal: "text-teal-700", coral: "text-coral-500", mustard: "text-[#b58200]", ink: "text-ink" };
+export function Stat({ value, label, tone = "teal", icon }: { value: ReactNode; label: string; tone?: "teal" | "coral" | "mustard" | "ink" | "plum"; icon?: ReactNode }) {
+  const tones = { teal: "text-teal-700", coral: "text-coral-500", mustard: "text-[#b58200]", ink: "text-ink", plum: "text-plum-700" };
+  const bars = { teal: "grad-teal", coral: "grad-coral", mustard: "grad-sun", ink: "grad-ink", plum: "grad-plum" };
   return (
-    <div className="card flex flex-col items-center px-2 py-3 text-center">
+    <div className="card relative flex flex-col items-center overflow-hidden px-2 py-3 text-center">
+      <span className={cn("absolute inset-x-0 top-0 h-1", bars[tone])} />
+      {icon && <span className={cn("mb-1 opacity-70", tones[tone])}>{icon}</span>}
       <span className={cn("display text-[30px] leading-none", tones[tone])}>{value}</span>
       <span className="mt-1 text-[11px] font-bold uppercase tracking-wide text-ink-mute">{label}</span>
     </div>
   );
 }
 
-export function Empty({ icon, title, body, action }: { icon: string; title: string; body?: string; action?: ReactNode }) {
+/** Animated circular progress ring, e.g. workouts done this week out of the goal. */
+export function GoalRing({ value, max, size = 92, stroke = 9, children, className }: { value: number; max: number; size?: number; stroke?: number; children?: ReactNode; className?: string }) {
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const pct = max > 0 ? Math.min(1, value / max) : 0;
+  return (
+    <div className={cn("relative grid place-items-center", className)} style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
+        <defs>
+          <linearGradient id="ring-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#ffd36a" />
+            <stop offset="0.6" stopColor="#f97360" />
+            <stop offset="1" stopColor="#ff8a75" />
+          </linearGradient>
+        </defs>
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(255,255,255,0.22)" strokeWidth={stroke} fill="none" />
+        <circle
+          cx={size / 2} cy={size / 2} r={r} stroke="url(#ring-grad)" strokeWidth={stroke} fill="none" strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={c * (1 - pct)} className="ring-fill" style={{ ["--ring-total" as string]: c }}
+        />
+      </svg>
+      <div className="absolute inset-0 grid place-items-center">{children}</div>
+    </div>
+  );
+}
+
+export function Empty({ icon, title, body, action }: { icon: ReactNode; title: string; body?: string; action?: ReactNode }) {
   return (
     <div className="card flex flex-col items-center px-6 py-10 text-center">
-      <div className="text-4xl">{icon}</div>
+      <div className="grid h-16 w-16 place-items-center rounded-3xl illo-bg text-4xl text-teal-700 shadow-card">{icon}</div>
       <h3 className="display mt-3 text-[22px]">{title}</h3>
       {body && <p className="mt-1 text-sm text-ink-soft">{body}</p>}
       {action && <div className="mt-4">{action}</div>}

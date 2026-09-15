@@ -1,31 +1,54 @@
 @import "tailwindcss";
 
 @theme {
-  --color-teal-900: #0b4f4a;
+  --color-teal-900: #083f3b;
+  --color-teal-800: #0b5d56;
   --color-teal-700: #0f766e;
+  --color-teal-600: #12968c;
   --color-teal-500: #14b8a6;
+  --color-teal-300: #5ee0d0;
   --color-teal-100: #cdeeea;
   --color-teal-50: #ecf8f6;
+  --color-coral-700: #c43f2b;
   --color-coral-600: #e0553f;
   --color-coral-500: #f97360;
+  --color-coral-300: #ffa595;
   --color-coral-100: #fde3dd;
+  --color-mustard-600: #d99a00;
   --color-mustard-500: #f5b301;
+  --color-mustard-300: #ffd36a;
   --color-mustard-100: #fff1c2;
+  --color-plum-700: #6d3fb5;
+  --color-plum-500: #8b5cf6;
+  --color-plum-100: #ece4fb;
+  --color-sky-600: #2f6fb5;
+  --color-sky-500: #4a8fd9;
+  --color-sky-100: #dcebfb;
+  --color-lime-500: #7cc242;
+  --color-lime-100: #e8f6d9;
   --color-cream: #fbf7f2;
   --color-sand: #f1eae2;
+  --color-sand-deep: #e6dccf;
   --color-ink: #1f2a2e;
   --color-ink-soft: #566369;
   --color-ink-mute: #8a959a;
   --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: "Bebas Neue", "Manrope", ui-sans-serif, system-ui, sans-serif;
-  --shadow-card: 0 4px 20px rgba(15, 118, 110, 0.08);
+  --shadow-card: 0 1px 2px rgba(31, 42, 46, 0.04), 0 8px 24px -8px rgba(15, 118, 110, 0.14);
+  --shadow-pop: 0 12px 32px -8px rgba(15, 118, 110, 0.35);
+  --shadow-coral: 0 10px 28px -8px rgba(249, 115, 96, 0.55);
 }
 
 html, body, #root { height: 100%; }
 html { background: var(--color-cream); -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
-  background: var(--color-cream);
+  background:
+    radial-gradient(900px 500px at -10% -10%, rgba(20, 184, 166, 0.14), transparent 60%),
+    radial-gradient(700px 420px at 110% 0%, rgba(249, 115, 96, 0.12), transparent 60%),
+    radial-gradient(600px 400px at 50% 110%, rgba(245, 179, 1, 0.10), transparent 60%),
+    var(--color-cream);
+  background-attachment: fixed;
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-size: 15px;
@@ -38,15 +61,74 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 
 .display { font-family: var(--font-display); letter-spacing: 0.02em; }
-.card { background: #fff; border-radius: 18px; box-shadow: var(--shadow-card); }
+.card {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+}
+.glass { background: rgba(255, 255, 255, 0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
 .tap { -webkit-tap-highlight-color: transparent; user-select: none; }
 .tap:active { transform: scale(0.98); }
 .scroll-x { overflow-x: auto; scrollbar-width: none; }
 .scroll-x::-webkit-scrollbar { display: none; }
-.safe-bottom { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); }
+.safe-bottom { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 92px); }
 .safe-top { padding-top: env(safe-area-inset-top, 0px); }
+
+/* Gradient fills — the "fancy" layer */
+.grad-teal { background-image: linear-gradient(135deg, #0b5d56 0%, #0f766e 45%, #14b8a6 100%); }
+.grad-teal-deep { background-image: linear-gradient(160deg, #083f3b 0%, #0f766e 60%, #12968c 100%); }
+.grad-coral { background-image: linear-gradient(135deg, #e0553f 0%, #f97360 55%, #ffa595 100%); }
+.grad-sun { background-image: linear-gradient(135deg, #f5b301 0%, #ffd36a 100%); }
+.grad-plum { background-image: linear-gradient(135deg, #6d3fb5 0%, #8b5cf6 100%); }
+.grad-sky { background-image: linear-gradient(135deg, #2f6fb5 0%, #4a8fd9 100%); }
+.grad-lime { background-image: linear-gradient(135deg, #5ea52c 0%, #7cc242 100%); }
+.grad-ink { background-image: linear-gradient(160deg, #1f2a2e 0%, #2d3b41 100%); }
+.grad-text { background-image: linear-gradient(90deg, #0f766e, #14b8a6 55%, #f97360); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.illo-bg { background-image: radial-gradient(120% 90% at 50% 100%, rgba(20, 184, 166, 0.18), transparent 60%), linear-gradient(180deg, #fff7ee 0%, #f6efe6 100%); }
+
+/* Dotted texture for hero panels (overlay, so it stacks on top of a gradient) */
+.dots { position: relative; }
+.dots::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1.2px, transparent 1.2px);
+  background-size: 14px 14px;
+}
+.dots > * { position: relative; z-index: 1; }
+.noise-ring::before {
+  content: ""; position: absolute; inset: -40% -20% auto auto; width: 260px; height: 260px; border-radius: 9999px;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.35), rgba(255,255,255,0.05) 60%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Station colours (1 sky, 2 plum, 3 coral, 4 lime) */
+.station-1 { background-image: linear-gradient(135deg, #2f6fb5, #4a8fd9); }
+.station-2 { background-image: linear-gradient(135deg, #6d3fb5, #8b5cf6); }
+.station-3 { background-image: linear-gradient(135deg, #e0553f, #f97360); }
+.station-4 { background-image: linear-gradient(135deg, #5ea52c, #7cc242); }
+.station-x { background-image: linear-gradient(135deg, #566369, #8a959a); }
+
+.tabata-row { background-image: linear-gradient(90deg, #ffd36a 0%, #f5b301 100%); }
+.all-row { background-image: linear-gradient(90deg, #cdeeea 0%, #a9e2db 100%); }
 
 @keyframes pulse-ring { 0% { transform: scale(0.95); opacity: 0.8; } 100% { transform: scale(1.25); opacity: 0; } }
 .pulse-ring::after { content: ""; position: absolute; inset: 0; border-radius: 9999px; border: 3px solid currentColor; animation: pulse-ring 1s ease-out infinite; }
 @keyframes fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .fade-up { animation: fade-up 0.25s ease-out both; }
+@keyframes pop-in { 0% { opacity: 0; transform: scale(0.9); } 60% { transform: scale(1.03); } 100% { opacity: 1; transform: none; } }
+.pop-in { animation: pop-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes ring-fill { from { stroke-dashoffset: var(--ring-total); } }
+.ring-fill { animation: ring-fill 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes shimmer { 0% { transform: translateX(-120%) skewX(-12deg); } 100% { transform: translateX(220%) skewX(-12deg); } }
+.shimmer { position: relative; overflow: hidden; }
+.shimmer::after { content: ""; position: absolute; top: 0; bottom: 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent); animation: shimmer 2.6s ease-in-out 1s infinite; }
+@keyframes glow { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+.glow { animation: glow 1.8s ease-in-out infinite; }
+.stagger > * { animation: fade-up 0.35s ease-out both; }
+.stagger > *:nth-child(1) { animation-delay: 0.02s; }
+.stagger > *:nth-child(2) { animation-delay: 0.06s; }
+.stagger > *:nth-child(3) { animation-delay: 0.10s; }
+.stagger > *:nth-child(4) { animation-delay: 0.14s; }
+.stagger > *:nth-child(5) { animation-delay: 0.18s; }
+.stagger > *:nth-child(6) { animation-delay: 0.22s; }
+.stagger > *:nth-child(n + 7) { animation-delay: 0.26s; }
