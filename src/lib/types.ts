@@ -109,6 +109,10 @@ export interface Profile {
   restSeconds: number;
   soundOn: boolean;
   onboarded: boolean;
+  /** Address of the sheet reader (blank = same site, /.netlify/functions/scan-sheet). */
+  readerUrl?: string;
+  /** Shared passcode for the group's sheet reader. */
+  readerPasscode?: string;
 }
 
 export interface AppData {

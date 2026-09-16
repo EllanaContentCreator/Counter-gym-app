@@ -34,6 +34,32 @@ weight and rep stored on the device.
 **https://ellanacontentcreator.github.io/Counter-gym-app/** — published automatically from `main` by the
 GitHub Pages workflow in `.github/workflows/pages.yml`. Open it on your phone and add it to the home screen.
 
+## Reading Carolyn's sheets automatically
+
+Counter can read a photo of a sheet and fill the rows in for you. The app never holds an API key — it
+posts the photo to a small serverless function (`netlify/functions/scan-sheet.mts`) that calls Claude
+and returns the rows as JSON. You check every row before it saves.
+
+Set it up once, for the whole group:
+
+1. **Get an Anthropic API key** — [console.anthropic.com](https://console.anthropic.com) → API keys →
+   create a key, and add a few dollars of credit. A sheet costs a few cents to read.
+2. **Deploy this repo to Netlify** (free): [app.netlify.com](https://app.netlify.com) → Add new site →
+   Import an existing project → GitHub → `counter-gym-app`. `netlify.toml` already holds the build and
+   function settings, so accept the defaults.
+3. **Add the environment variables** — Site configuration → Environment variables:
+   - `ANTHROPIC_API_KEY` — the key from step 1.
+   - `SCAN_PASSCODE` — any word the group will share. Optional, but without it anyone who finds the
+     function address can spend your credit.
+   Then Deploys → Trigger deploy, so the function picks them up.
+4. **In the app**, open **Me → Sheet reader**. On the Netlify address everything is same-origin, so leave
+   the reader address blank; just type the passcode and tap **Check the reader**. On any other address
+   (e.g. the GitHub Pages copy) paste `https://<your-site>.netlify.app/.netlify/functions/scan-sheet`.
+
+Then: **Add this week's sheet → take the photo → Read the sheet for me**. Rows that match the library
+link to the existing exercise (keeping Carolyn's wording as the row label); anything new is added to the
+library with guessed equipment and muscles, ready to edit.
+
 ## Deploy in one click
 
 [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/EllanaContentCreator/counter-gym-app)
@@ -69,6 +95,8 @@ counter/
   src/data/programs.ts     Carolyn's seeded programs
   src/lib/store.ts         local-first state (localStorage) + actions
   src/lib/photos.ts        sheet photos in IndexedDB (compress, store, object-URL cache, backup)
+  src/lib/scan.ts          calls the sheet reader, matches read rows to the exercise library
+  netlify/functions/       scan-sheet.mts — reads a sheet photo into rows with Claude
   src/components/MuscleMap.tsx, FormDiagram.tsx   exercise diagrams
   src/components/AddSheet.tsx, SheetPhotos.tsx, PhotoViewer.tsx   weekly sheet photo flow
   public/fonts/*           self-hosted Manrope + Bebas Neue (works offline)
