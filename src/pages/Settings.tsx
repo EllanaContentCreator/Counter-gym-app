@@ -2,7 +2,8 @@ import { useRef, useState } from "react";
 import { useAppData, actions } from "@/lib/store";
 import { Header } from "@/components/Header";
 import { Button, Card, Field, Sheet, inputCls, cnHelper } from "@/components/ui";
-import { IconImage } from "@/components/Icons";
+import { IconImage, IconSpark } from "@/components/Icons";
+import { readerEndpoint } from "@/lib/scan";
 
 export default function Settings() {
   const data = useAppData();
@@ -13,6 +14,37 @@ export default function Settings() {
   const isStandalone = typeof window !== "undefined" && (window.matchMedia("(display-mode: standalone)").matches || (navigator as { standalone?: boolean }).standalone);
 
   const [busy, setBusy] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [readerMsg, setReaderMsg] = useState("");
+  const [readerOk, setReaderOk] = useState(false);
+  const testReader = async () => {
+    setTesting(true);
+    setReaderMsg("");
+    try {
+      const res = await fetch(readerEndpoint(p.readerUrl), {
+        method: "POST",
+        headers: { "content-type": "application/json", ...(p.readerPasscode ? { "x-counter-passcode": p.readerPasscode } : {}) },
+        body: JSON.stringify({}),
+      });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      // "No image supplied" means the reader is alive and let us past the passcode.
+      if (res.status === 400 && /image/i.test(body.error ?? "")) {
+        setReaderOk(true);
+        setReaderMsg("Reader is connected and ready.");
+      } else if (res.status === 401) {
+        setReaderOk(false);
+        setReaderMsg("The reader is there, but that passcode is wrong.");
+      } else {
+        setReaderOk(false);
+        setReaderMsg(body.error || `The reader answered with an error (${res.status}).`);
+      }
+    } catch {
+      setReaderOk(false);
+      setReaderMsg("Couldn't reach that address. Check it's typed correctly and you're online.");
+    } finally {
+      setTesting(false);
+    }
+  };
   const photoCount = data.programs.reduce((a, p) => a + (p.photoIds?.length ?? 0), 0);
   const exportBackup = async () => {
     setBusy(true);
@@ -53,6 +85,22 @@ export default function Settings() {
             <span className="font-bold">Beeps & chimes</span>
             <input type="checkbox" checked={p.soundOn} onChange={(e) => actions.updateProfile({ soundOn: e.target.checked })} className="h-6 w-6 accent-teal-700" />
           </label>
+        </Card>
+
+        <Card className="space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="grid h-8 w-8 place-items-center rounded-xl grad-sun text-ink"><IconSpark size={18} /></span>
+            <div className="display text-[22px]">Sheet reader</div>
+          </div>
+          <p className="text-sm text-ink-soft">Reads Carolyn's sheet off a photo so nobody has to type the rows in. Leave the address blank if Counter and the reader are on the same site.</p>
+          <Field label="Reader address" hint={`Blank means ${readerEndpoint()}`}>
+            <input className={inputCls} value={p.readerUrl ?? ""} onChange={(e) => actions.updateProfile({ readerUrl: e.target.value })} placeholder="https://your-site.netlify.app/.netlify/functions/scan-sheet" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
+          </Field>
+          <Field label="Group passcode" hint="The word your group agreed on. Leave blank if the reader has none.">
+            <input className={inputCls} value={p.readerPasscode ?? ""} onChange={(e) => actions.updateProfile({ readerPasscode: e.target.value })} placeholder="e.g. counter2026" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
+          </Field>
+          <Button variant="secondary" onClick={testReader} disabled={testing}>{testing ? "Checking…" : "Check the reader"}</Button>
+          {readerMsg && <p className={cnHelper("text-sm font-bold", readerOk ? "text-teal-700" : "text-coral-600")}>{readerMsg}</p>}
         </Card>
 
         <Card className="space-y-3">

@@ -15,6 +15,8 @@ const defaultProfile: Profile = {
   restSeconds: 60,
   soundOn: true,
   onboarded: false,
+  readerUrl: "",
+  readerPasscode: "",
 };
 
 function seed(): AppData {
