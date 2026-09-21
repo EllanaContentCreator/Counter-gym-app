@@ -27,6 +27,35 @@ export default function Settings() {
     actions.updateNutrition({ targets: { ...n.targets, [type]: { ...n.targets[type], [which]: band } } });
   };
 
+  // "I can't see the new version" should be answerable, and fixable, from here.
+  const [updating, setUpdating] = useState(false);
+  const [updateMsg, setUpdateMsg] = useState("");
+  const checkForUpdate = async () => {
+    setUpdating(true);
+    setUpdateMsg("");
+    try {
+      const reg = await navigator.serviceWorker?.getRegistration();
+      if (!reg) {
+        setUpdateMsg("This copy isn't installed as an app, so it's always the latest.");
+        return;
+      }
+      await reg.update();
+      // An update that is ready sits in `installing` or `waiting` until it takes over.
+      const pending = reg.installing ?? reg.waiting;
+      if (pending) {
+        setUpdateMsg("A new version is ready — reloading…");
+        pending.postMessage?.({ type: "SKIP_WAITING" });
+        window.setTimeout(() => window.location.reload(), 900);
+      } else {
+        setUpdateMsg("You're already on the newest version.");
+      }
+    } catch {
+      setUpdateMsg("Couldn't check just now. Check you're online and try again.");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const [busy, setBusy] = useState(false);
   const [testing, setTesting] = useState(false);
   const [readerMsg, setReaderMsg] = useState("");
@@ -187,7 +216,16 @@ export default function Settings() {
         <Card className="space-y-2">
           <div className="display text-[22px]">About Counter</div>
           <p className="text-sm text-ink-soft">Counter is built on the training sheets of <b>Carolyn Counter</b>: four stations, three rounds, a tabata to finish, and every weight written down. She's retired; the accountability isn't. Count it. Own it.</p>
-          <p className="text-xs text-ink-mute">Version 1.1 · Your data never leaves your device.</p>
+          <p className="text-xs text-ink-mute">Your data never leaves your device.</p>
+          <div className="rounded-xl bg-sand px-3 py-2">
+            <div className="text-[11px] font-extrabold uppercase tracking-widest text-ink-mute">This build</div>
+            <div className="font-mono text-[13px] font-bold text-ink">{__BUILD_ID__}</div>
+          </div>
+          <Button variant="secondary" onClick={checkForUpdate} disabled={updating}>
+            {updating ? "Checking…" : "Check for updates"}
+          </Button>
+          {updateMsg && <p className="text-sm font-bold text-teal-700">{updateMsg}</p>}
+          <p className="text-[11px] text-ink-mute">An app on your home screen caches itself so it works offline. If something new is missing, tap this.</p>
         </Card>
 
         <Button full variant="danger" onClick={() => setConfirmReset(true)}>Reset everything</Button>

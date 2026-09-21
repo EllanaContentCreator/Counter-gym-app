@@ -6,6 +6,13 @@ import path from "node:path";
 
 const base = process.env.VITE_BASE ?? "/";
 
+/**
+ * A human-readable stamp for the build, shown in Me → About.
+ * When someone says "I can't see the new thing", this says which build their
+ * phone is actually running, instead of everyone guessing.
+ */
+const buildId = new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC";
+
 export default defineConfig({
   base,
   plugins: [
@@ -37,6 +44,7 @@ export default defineConfig({
       },
     }),
   ],
+  define: { __BUILD_ID__: JSON.stringify(buildId) },
   resolve: { alias: { "@": path.resolve(import.meta.dirname, "src") } },
   server: { port: 5173, host: true },
 });
