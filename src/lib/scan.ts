@@ -172,10 +172,19 @@ const MUSCLE_HINTS: Array<[string, string]> = [
   ["twist", "obliques"], ["swing", "glutes"], ["burpee", "full-body"], ["slam", "full-body"], ["get up", "full-body"],
 ];
 
-function guess<T extends string>(name: string, hints: Array<[string, string]>, fallback: T): T[] {
-  const lower = ` ${name.toLowerCase()} `;
-  const found = hints.filter(([word]) => lower.includes(` ${word}`) || lower.includes(`${word} `) || lower.includes(word)).map(([, id]) => id);
-  return (found.length ? [...new Set(found)].slice(0, 3) : [fallback]) as T[];
+/**
+ * The hints a name actually contains — empty when it says nothing recognisable.
+ *
+ * Whole words only. A bare substring test reads "mat" out of "Matches" and
+ * "bar" out of "Barely", which is harmless while it only picks an equipment
+ * tag but not once a drawing is chosen on the strength of it.
+ */
+function hintsIn(name: string, hints: Array<[string, string]>): string[] {
+  const lower = name.toLowerCase();
+  const found = hints
+    .filter(([word]) => new RegExp(`(?:^|[^a-z0-9])${word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:[^a-z0-9]|$)`).test(lower))
+    .map(([, id]) => id);
+  return [...new Set(found)].slice(0, 3);
 }
 
 /**
@@ -326,11 +335,74 @@ function newExerciseName(raw: string) {
   return t || raw.trim();
 }
 
-function makeExercise(name: string, isTabata: boolean): Exercise {
-  const equipment = guess(name, EQUIP_HINTS, "bodyweight");
-  const muscles = guess(name, MUSCLE_HINTS, "full-body");
+/**
+ * A drawing to put on a move that has none of its own.
+ *
+ * Every exercise in the library is drawn; a move scanned off Carolyn's sheet is
+ * not, and used to fall back to an anatomy diagram — the one tile in the app
+ * without the woman in it. The library already shares one drawing across
+ * near-identical moves (a goblet squat and a kettlebell goblet squat), so a
+ * scanned move borrows on the same terms: the nearest thing by name, or failing
+ * that the nearest thing using the same kit on the same muscles.
+ *
+ * It is a stand-in, not a claim — it is only ever reached when nothing in the
+ * library was close enough to match against, and the row keeps Carolyn's own
+ * wording. Where nothing is close on either count, the diagram still wins over
+ * a picture of the wrong movement.
+ */
+/**
+ * Whether two names describe the same kind of movement.
+ *
+ * Score alone cannot tell "Barbell Bicep Curl 20's" (0.48 against Dumbbell
+ * Bicep Curl) from "Abs : Single Arm To Opposite Leg" (0.45 against Dumbbell
+ * Single Leg Deadlift) — the first shares a real verb, the second only shares
+ * the words "single", "arm" and "leg" by coincidence.
+ */
+function sharesMovement(a: string, b: string) {
+  const ta = tokens(a);
+  const tb = tokens(b);
+  return MOVEMENT.some((m) => ta.includes(m) && tb.includes(m));
+}
+
+function borrowImage(
+  library: Exercise[],
+  name: string,
+  equipment: string[],
+  muscles: string[],
+  best: Exercise | undefined,
+  bestScore: number,
+  /** false when the name named no kit and no body part, so any pick would be arbitrary */
+  hasSignal: boolean,
+): string | undefined {
+  // Close enough on the words alone, and doing the same thing with them.
+  if (best?.image && bestScore >= 0.3 && sharesMovement(name, best.name)) return best.image;
+  // Nothing in the name to go on. A drawing chosen at random is worse than an
+  // honest diagram, so this is where the borrowing stops.
+  if (!hasSignal) return undefined;
+  let pick: Exercise | undefined;
+  let score = 0;
+  for (const ex of library) {
+    if (!ex.image) continue;
+    // Same kit counts for more than the same muscle: a kettlebell move drawn
+    // with a kettlebell reads right even when the movement differs.
+    const s = ex.equipment.filter((e) => equipment.includes(e)).length * 2 + ex.muscles.filter((m) => muscles.includes(m)).length;
+    if (s > score) {
+      score = s;
+      pick = ex;
+    }
+  }
+  return score > 0 ? pick?.image : undefined;
+}
+
+function makeExercise(name: string, isTabata: boolean, library: Exercise[] = [], best?: Exercise, bestScore = 0): Exercise {
+  const equipFound = hintsIn(name, EQUIP_HINTS);
+  const muscleFound = hintsIn(name, MUSCLE_HINTS);
+  const equipment = (equipFound.length ? equipFound : ["bodyweight"]) as Exercise["equipment"];
+  const muscles = (muscleFound.length ? muscleFound : ["full-body"]) as Exercise["muscles"];
   const known = new Set(EQUIPMENT.map((e) => e.id as string));
+  const kit = (equipment as string[]).filter((e) => known.has(e));
   return {
+    image: borrowImage(library, name, kit.length ? kit : ["bodyweight"], muscles as string[], best, bestScore, equipFound.length > 0 || muscleFound.length > 0),
     id: `custom-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48)}-${uid().slice(0, 4)}`,
     name: name.trim(),
     equipment: (equipment.filter((e) => known.has(e)) as Exercise["equipment"]).length
@@ -381,7 +453,7 @@ export function matchRows(scanned: ScannedRow[], custom: Exercise[]): MatchedRow
     }
 
     const good = !!best && bestScore >= MATCH_THRESHOLD;
-    const exercise = good ? best! : makeExercise(newExerciseName(name), slot === "TABATA");
+    const exercise = good ? best! : makeExercise(newExerciseName(name), slot === "TABATA", library, best, bestScore);
     if (!good) created.push(exercise);
     const row: ProgramRow = {
       id: uid(),
