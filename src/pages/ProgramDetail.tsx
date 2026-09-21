@@ -169,17 +169,6 @@ export default function ProgramDetail() {
 
         {program.notes && !editing && <p className="rounded-xl bg-teal-50 px-3 py-2 text-sm text-teal-900">{program.notes}</p>}
 
-        {/* While typing rows in, the photo belongs at the top to read off. */}
-        {editing && (
-          <div className="card p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <div className="text-[11px] font-extrabold uppercase tracking-widest text-ink-mute">Carolyn's sheet photo</div>
-              {program.photoIds?.length ? <span className="text-[11px] font-semibold text-ink-soft">Tap to zoom while you type</span> : null}
-            </div>
-            <SheetPhotos program={program} editing />
-          </div>
-        )}
-
         <SheetTable program={working} custom={data.customExercises} editing={editing} onEdit={editing ? (r) => setRow(r) : undefined} />
 
         {editing ? (
@@ -236,12 +225,18 @@ export default function ProgramDetail() {
 
         {/*
          * The exercises are what you come to this page for, so the photo of the
-         * original sheet sits underneath them rather than in front of them.
+         * original sheet sits underneath them rather than in front of them —
+         * while editing too, where the rows are what you're working on.
          */}
-        {!editing && program.photoIds?.length ? (
-          <div className="pt-1">
-            <div className="mb-1 text-[11px] font-extrabold uppercase tracking-widest text-ink-mute">Carolyn's sheet</div>
-            <SheetPhotos program={program} editing={false} />
+        {(program.photoIds?.length || editing) ? (
+          <div className={cn("pt-1", editing && "card p-3")}>
+            <div className="mb-1 flex items-center justify-between">
+              <div className="text-[11px] font-extrabold uppercase tracking-widest text-ink-mute">
+                {editing ? "Carolyn's sheet photo" : "Carolyn's sheet"}
+              </div>
+              {editing && program.photoIds?.length ? <span className="text-[11px] font-semibold text-ink-soft">Tap to zoom while you type</span> : null}
+            </div>
+            <SheetPhotos program={program} editing={editing} />
           </div>
         ) : null}
       </div>
