@@ -3,7 +3,7 @@ import { useAppData, actions } from "@/lib/store";
 import { Header } from "@/components/Header";
 import { Button, Card, Field, Sheet, inputCls, cnHelper } from "@/components/ui";
 import { IconImage, IconSpark } from "@/components/Icons";
-import { hostCanRunReader, readerEndpoint } from "@/lib/scan";
+import { hostCanRunReader, readerEndpoint, readerIsPreconfigured } from "@/lib/scan";
 import { DAY_TYPE_LABEL } from "@/data/nutrition";
 import type { DayType } from "@/lib/types";
 
@@ -58,6 +58,7 @@ export default function Settings() {
 
   const [busy, setBusy] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [showReaderDetail, setShowReaderDetail] = useState(false);
   const [readerMsg, setReaderMsg] = useState("");
   const [readerOk, setReaderOk] = useState(false);
   const testReader = async () => {
@@ -182,15 +183,32 @@ export default function Settings() {
             <span className="grid h-8 w-8 place-items-center rounded-xl grad-sun text-ink"><IconSpark size={18} /></span>
             <div className="display text-[22px]">Sheet reader</div>
           </div>
-          <p className="text-sm text-ink-soft">Reads Carolyn's sheet off a photo so nobody has to type the rows in. Leave the address blank if Counter and the reader are on the same site.</p>
-          {/* Saying this here beats letting it fail later as a bare 404. */}
-          {!hostCanRunReader() && !p.readerUrl?.trim() && (
+          <p className="text-sm text-ink-soft">Reads Carolyn's sheet off a photo so nobody has to type the rows in.</p>
+
+          {/*
+           * When the reader's address is baked into the build there is nothing
+           * for anyone to set up, so the whole thing collapses to one line and
+           * the boxes hide behind "Change it". Nobody in the group should need
+           * to understand any of this.
+           */}
+          {readerIsPreconfigured() ? (
+            <div className="rounded-xl bg-lime-100 px-3 py-2.5 text-[13px] font-semibold text-[#3f6f18]">
+              The reader is already set up for your group — nothing for you to do. Just take a photo of the sheet and tap
+              <b> Read the sheet for me</b>.
+            </div>
+          ) : (
+            <p className="text-[13px] text-ink-soft">Leave the address blank if Counter and the reader are on the same site.</p>
+          )}
+
+          {!readerIsPreconfigured() && !hostCanRunReader() && !p.readerUrl?.trim() && (
             <div className="rounded-xl bg-mustard-100 px-3 py-2.5 text-[13px] font-semibold text-ink-soft">
               This copy of Counter is on <b>{window.location.hostname}</b>, which can only hand out files — it can't run the
               reader itself. Reading a sheet from a photo needs a small server, so paste that server's address below.
               Everything else in Counter works here exactly as it should.
             </div>
           )}
+          {(!readerIsPreconfigured() || showReaderDetail) && (
+          <>
           <Field label="Reader address" hint={`Blank means ${readerEndpoint()}`}>
             <input className={inputCls} value={p.readerUrl ?? ""} onChange={(e) => actions.updateProfile({ readerUrl: e.target.value })} placeholder="https://your-site.netlify.app/.netlify/functions/scan-sheet" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
           </Field>
@@ -199,6 +217,13 @@ export default function Settings() {
           </Field>
           <Button variant="secondary" onClick={testReader} disabled={testing}>{testing ? "Checking…" : "Check the reader"}</Button>
           {readerMsg && <p className={cnHelper("text-sm font-bold", readerOk ? "text-teal-700" : "text-coral-600")}>{readerMsg}</p>}
+          </>
+          )}
+          {readerIsPreconfigured() && !showReaderDetail && (
+            <button type="button" onClick={() => setShowReaderDetail(true)} className="tap text-[13px] font-extrabold text-teal-700">
+              Change it
+            </button>
+          )}
         </Card>
 
         <Card className="space-y-3">

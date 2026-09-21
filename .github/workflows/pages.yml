@@ -25,6 +25,16 @@ jobs:
       - run: npm run build
         env:
           VITE_BASE: /Counter-gym-app/
+          # Where the sheet reader lives, baked into the build so nobody in the
+          # group has to set anything up. Set it once in the repository's
+          # Settings -> Secrets and variables -> Actions -> Variables, and every
+          # future build carries it.
+          #
+          # The passcode is a speed bump, not a secret: it ends up in the
+          # published JavaScript, where anyone can read it. It stops someone who
+          # merely stumbles on the function address, nothing more.
+          VITE_READER_URL: ${{ vars.VITE_READER_URL }}
+          VITE_READER_PASSCODE: ${{ vars.VITE_READER_PASSCODE }}
       - uses: actions/configure-pages@v5
         with:
           enablement: true

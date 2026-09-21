@@ -21,12 +21,36 @@ export interface ScannedSheet {
   confidence: "high" | "medium" | "low";
 }
 
-/** Where the reader lives. Same-origin by default, so a Netlify deploy needs no setup at all. */
+/**
+ * A reader address baked in when the app is built (VITE_READER_URL), so the
+ * group never has to set one up. Nobody but the person who deploys Counter
+ * should ever see a settings screen for this.
+ */
+const BUILT_IN_READER = (import.meta.env.VITE_READER_URL ?? "").trim();
+const BUILT_IN_PASSCODE = (import.meta.env.VITE_READER_PASSCODE ?? "").trim();
+
+/**
+ * Where the reader lives, most specific first:
+ *   1. an address typed into Me → Sheet reader
+ *   2. one baked in at build time
+ *   3. the same site the app is served from (a Netlify deploy needs nothing)
+ */
 export function readerEndpoint(configured?: string) {
   const trimmed = configured?.trim();
   if (trimmed) return trimmed.replace(/\/+$/, "");
+  if (BUILT_IN_READER) return BUILT_IN_READER.replace(/\/+$/, "");
   if (typeof window === "undefined") return "";
   return `${window.location.origin}/.netlify/functions/scan-sheet`;
+}
+
+/** The passcode to send: whatever she typed, else one baked in at build time. */
+export function readerPasscode(configured?: string) {
+  return configured?.trim() || BUILT_IN_PASSCODE;
+}
+
+/** True when the app already knows where its reader is, so nobody need do a thing. */
+export function readerIsPreconfigured() {
+  return BUILT_IN_READER.length > 0;
 }
 
 /**
@@ -61,7 +85,7 @@ export async function scanSheet(file: Blob, opts: { endpoint?: string; passcode?
   const url = readerEndpoint(opts.endpoint);
   if (!url) throw new Error("No sheet reader is set up yet. Add its address in Me → Sheet reader.");
   // Nothing to be gained from posting a photo to an address that cannot answer.
-  if (!opts.endpoint?.trim() && !hostCanRunReader()) {
+  if (!opts.endpoint?.trim() && !BUILT_IN_READER && !hostCanRunReader()) {
     throw new Error(
       `This copy of Counter is on ${window.location.hostname}, which can only serve files — it can't run the sheet reader itself. ${SET_UP_HINT}`,
     );
@@ -71,7 +95,10 @@ export async function scanSheet(file: Blob, opts: { endpoint?: string; passcode?
   try {
     res = await fetch(url, {
       method: "POST",
-      headers: { "content-type": "application/json", ...(opts.passcode ? { "x-counter-passcode": opts.passcode } : {}) },
+      headers: {
+        "content-type": "application/json",
+        ...(readerPasscode(opts.passcode) ? { "x-counter-passcode": readerPasscode(opts.passcode) } : {}),
+      },
       body: JSON.stringify({ image: data, mediaType }),
     });
   } catch {
