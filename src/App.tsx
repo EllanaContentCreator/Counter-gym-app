@@ -13,6 +13,7 @@ import Workout from "@/pages/Workout";
 import Progress from "@/pages/Progress";
 import SessionDetail from "@/pages/SessionDetail";
 import LogPast from "@/pages/LogPast";
+import Food from "@/pages/Food";
 import Timer from "@/pages/Timer";
 import Settings from "@/pages/Settings";
 import Onboarding from "@/pages/Onboarding";
@@ -86,6 +87,7 @@ export default function App() {
         <Route path="/library" component={Library} />
         <Route path="/library/:id" component={ExerciseDetail} />
         <Route path="/workout" component={Workout} />
+        <Route path="/food" component={Food} />
         <Route path="/progress" component={Progress} />
         <Route path="/log-past" component={LogPast} />
         <Route path="/progress/:id" component={SessionDetail} />

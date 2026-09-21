@@ -1,4 +1,4 @@
-import type { Exercise, Program, ProgramRow, SetEntry, WorkoutSession } from "./types";
+import type { AppData, DayRecord, DayType, Exercise, FoodEntry, PlanDay, Program, ProgramRow, SetEntry, TargetBand, WorkoutSession } from "./types";
 import { EXERCISES, EXERCISE_BY_ID } from "@/data/exercises";
 
 export function cn(...parts: Array<string | false | null | undefined>) {
@@ -242,4 +242,53 @@ export const QUOTES = [
 export function quoteOfTheDay() {
   const d = Math.floor(Date.now() / 864e5);
   return QUOTES[d % QUOTES.length];
+}
+
+// ───────────── Food ─────────────
+
+/** Monday is 0, to match the plan and the Monday-based week helpers above. */
+export function weekdayIndex(ts: number) {
+  return (new Date(ts).getDay() + 6) % 7;
+}
+
+/** The plan for a given day, or undefined if that weekday has no plan. */
+export function planForDay(mealPlan: PlanDay[], ts: number): PlanDay | undefined {
+  return mealPlan.find((d) => d.weekday === weekdayIndex(ts));
+}
+
+/** What kind of day this is. Falls back to a normal day when nothing says otherwise. */
+export function dayTypeFor(mealPlan: PlanDay[], ts: number): DayType {
+  return planForDay(mealPlan, ts)?.dayType ?? "normal";
+}
+
+export function targetFor(data: Pick<AppData, "mealPlan" | "nutrition">, ts: number): TargetBand {
+  return data.nutrition.targets[dayTypeFor(data.mealPlan, ts)];
+}
+
+/** Everything eaten on a day, added up. */
+export function foodTotals(food: FoodEntry[]) {
+  return food.reduce(
+    (a, f) => ({
+      calories: a.calories + (f.calories || 0),
+      protein: a.protein + (f.protein || 0),
+      carbs: a.carbs + (f.carbs || 0),
+      fat: a.fat + (f.fat || 0),
+    }),
+    { calories: 0, protein: 0, carbs: 0, fat: 0 },
+  );
+}
+
+export function dayRecord(days: Record<string, DayRecord>, ts: number): DayRecord {
+  const key = dayKey(ts);
+  return days[key] ?? { date: key, food: [] };
+}
+
+/**
+ * How a total sits against its band: below it, inside it, or past the top.
+ * "over" is only ever a colour, never a telling-off.
+ */
+export function bandState(value: number, band: [number, number]): "under" | "inside" | "over" {
+  if (value < band[0]) return "under";
+  if (value > band[1]) return "over";
+  return "inside";
 }

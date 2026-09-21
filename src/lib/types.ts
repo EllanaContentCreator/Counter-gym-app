@@ -101,6 +101,90 @@ export interface WorkoutSession {
   extraRows?: ProgramRow[];
 }
 
+// ───────────── Food ─────────────
+
+/** Where a food sits in the day. Carolyn's ladies eat five ways. */
+export type MealSlot = "breakfast" | "lunch" | "snack" | "dinner" | "extras";
+
+/** What kind of day it is, which decides the calorie and protein target. */
+export type DayType = "strength" | "cardio" | "normal" | "fasting";
+
+/** One thing eaten, on one day. */
+export interface FoodEntry {
+  id: string;
+  slot: MealSlot;
+  name: string;
+  /** Free text, because "150 g" and "2 eggs" are both right. */
+  quantity: string;
+  calories: number;
+  protein: number;
+  carbs?: number;
+  fat?: number;
+  notes?: string;
+  loggedAt: number;
+  /** Set when this came from a meal-plan meal, so it can be ticked off and undone. */
+  planMealId?: string;
+}
+
+/** A food eaten often enough to deserve one tap. */
+export interface FoodFavourite {
+  id: string;
+  name: string;
+  quantity: string;
+  calories: number;
+  protein: number;
+  carbs?: number;
+  fat?: number;
+  /** Where it usually goes, so one tap lands it in the right meal. */
+  slot?: MealSlot;
+  /** How many times it has been tapped, so the ones she really eats float up. */
+  uses: number;
+}
+
+/**
+ * Everything logged on one day, keyed by its local date (YYYY-MM-DD). Workouts
+ * stay in `sessions` and are joined by date, so nothing is stored twice.
+ */
+export interface DayRecord {
+  date: string;
+  food: FoodEntry[];
+}
+
+/** A target is a band to land inside, not a line to go over. */
+export interface TargetBand {
+  calories: [number, number];
+  protein: [number, number];
+}
+
+/** One meal in the weekly plan. */
+export interface PlanMeal {
+  id: string;
+  slot: MealSlot;
+  title: string;
+  /** The parts of it, shown under the title and kept as the entry's note. */
+  items: string[];
+  calories: number;
+  protein: number;
+  /** Eaten some days and not others — never counted as missed. */
+  optional?: boolean;
+}
+
+/** One day of the weekly plan. Monday is 0. */
+export interface PlanDay {
+  weekday: number;
+  dayType: DayType;
+  /** Fasting until around midday. Separate from day type — Wednesday is both. */
+  fastingMorning?: boolean;
+  meals: PlanMeal[];
+}
+
+export interface NutritionSettings {
+  /** Editable target bands, one per kind of day. */
+  targets: Record<DayType, TargetBand>;
+  startWeight: number;
+  goalWeight: number;
+}
+
 export interface Profile {
   name: string;
   trainerName: string;
@@ -124,6 +208,11 @@ export interface AppData {
   /** Per-exercise last-used weight text, for quick prefill */
   lastWeights: Record<string, string>;
   favourites: string[];
+  /** Everything eaten, keyed by local date. */
+  days: Record<string, DayRecord>;
+  foodFavourites: FoodFavourite[];
+  mealPlan: PlanDay[];
+  nutrition: NutritionSettings;
 }
 
 /** Shape of an exported backup file: app data plus the sheet photos as data URLs. */

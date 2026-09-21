@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAppData } from "@/lib/store";
-import { greeting, quoteOfTheDay, nextProgram, sessionsThisWeek, weekStreak, programSummary, formatDate, formatDuration, findExercise, rowName, programsThisWeek, programDate } from "@/lib/utils";
+import { greeting, quoteOfTheDay, nextProgram, sessionsThisWeek, weekStreak, programSummary, formatDate, formatDuration, findExercise, rowName, programsThisWeek, programDate, dayRecord, dayTypeFor, foodTotals, planForDay, targetFor, cn } from "@/lib/utils";
 import { Header, TimerButton } from "@/components/Header";
 import { Button, Card, GoalRing, Pill, SectionTitle, Stat } from "@/components/ui";
 import { ExerciseImage } from "@/components/ExerciseImage";
@@ -9,6 +9,7 @@ import { PhotoThumb } from "@/components/SheetPhotos";
 import { AddSheetFlow } from "@/components/AddSheet";
 import { IconCamera, IconCheck, IconDumbbell, IconFlame, IconNext, IconPlay, IconSheet, IconTimer, IconTrophy } from "@/components/Icons";
 import { startSession } from "@/lib/session";
+import { DAY_TYPE_LABEL } from "@/data/nutrition";
 
 export default function Today() {
   const data = useAppData();
@@ -22,6 +23,15 @@ export default function Today() {
   const sheetsThisWeek = programsThisWeek(data.programs);
   const sheetsGoal = Math.max(2, goal);
   const totalDone = data.sessions.filter((s) => s.finishedAt).length;
+
+  // Today's eating, sitting next to today's training rather than in its own app.
+  const today = dayRecord(data.days, Date.now());
+  const eaten = foodTotals(today.food);
+  const target = targetFor(data, Date.now());
+  const dayType = dayTypeFor(data.mealPlan, Date.now());
+  const plan = planForDay(data.mealPlan, Date.now());
+  const mealsPlanned = plan?.meals.filter((m) => !m.optional).length ?? 0;
+  const mealsDone = new Set(today.food.map((f) => f.planMealId).filter(Boolean)).size;
 
   const begin = (mode: "free" | "guided45") => {
     if (!next) return;
@@ -122,6 +132,48 @@ export default function Today() {
           <Stat value={streak} label={streak === 1 ? "Week streak" : "Weeks streak"} tone="coral" icon={<IconFlame size={16} />} />
           <Stat value={totalDone} label="Workouts" tone="mustard" icon={<IconTrophy size={16} />} />
         </div>
+
+        {/*
+         * Food sits on Today next to the training, because the day is one day.
+         * Exercise calories are never added back on — the two are meant to work
+         * together, not cancel each other out.
+         */}
+        <Link href="/food" className="card tap block p-4">
+          <div className="flex items-baseline justify-between">
+            <div className="display text-[20px]">Food today</div>
+            <Pill tone={dayType === "strength" ? "coral" : dayType === "fasting" ? "ink" : "teal"}>{DAY_TYPE_LABEL[dayType]} day</Pill>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            {([
+              { label: "Calories", value: eaten.calories, band: target.calories, unit: "", tone: "teal" as const },
+              { label: "Protein", value: eaten.protein, band: target.protein, unit: "g", tone: "coral" as const },
+            ]).map((m) => (
+              <div key={m.label}>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wide text-ink-mute">{m.label}</span>
+                  <span className="text-[10px] font-semibold text-ink-soft">{m.band[0]}–{m.band[1]}{m.unit}</span>
+                </div>
+                <div className={cn("display text-[26px] leading-none", m.tone === "teal" ? "text-teal-700" : "text-coral-500")}>
+                  {Math.round(m.value)}{m.unit && <span className="ml-0.5 text-sm font-bold text-ink-mute">{m.unit}</span>}
+                </div>
+                <div className="relative mt-1.5 h-2 overflow-hidden rounded-full bg-sand">
+                  <span className="absolute inset-y-0 rounded-full bg-white/90" style={{ left: `${Math.min(100, (m.band[0] / (m.band[1] * 1.15)) * 100)}%`, width: `${Math.min(100, ((m.band[1] - m.band[0]) / (m.band[1] * 1.15)) * 100)}%` }} />
+                  <span className={cn("absolute inset-y-0 left-0 rounded-full", m.tone === "teal" ? "grad-teal" : "grad-coral")} style={{ width: `${Math.min(100, (m.value / (m.band[1] * 1.15)) * 100)}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-2.5 flex items-center justify-between text-[11px] font-semibold text-ink-soft">
+            <span>
+              {today.food.length === 0
+                ? plan?.fastingMorning
+                  ? "Fasting this morning — first meal around 12–1."
+                  : "Nothing logged yet."
+                : `${today.food.length} thing${today.food.length === 1 ? "" : "s"} logged${mealsPlanned ? ` · ${mealsDone}/${mealsPlanned} planned meals` : ""}`}
+            </span>
+            <span className="font-extrabold text-teal-700">Open <IconNext size={12} className="inline" /></span>
+          </div>
+        </Link>
 
         <div className="grid grid-cols-2 gap-2">
           <Link href="/programs" className="card tap flex items-center gap-3 p-4">

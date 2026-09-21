@@ -1,7 +1,8 @@
 import { useSyncExternalStore } from "react";
-import type { AppData, BackupFile, Exercise, Profile, Program, WorkoutSession } from "./types";
+import type { AppData, BackupFile, DayRecord, Exercise, FoodEntry, FoodFavourite, NutritionSettings, PlanMeal, Profile, Program, WorkoutSession } from "./types";
 import { clearPhotos, deletePhoto, exportPhotos, importPhotos } from "./photos";
 import { CAROLYN_PROGRAMS } from "@/data/programs";
+import { DEFAULT_FOOD_FAVOURITES, DEFAULT_MEAL_PLAN, DEFAULT_NUTRITION } from "@/data/nutrition";
 
 const KEY = "counter.app.v1";
 
@@ -28,6 +29,10 @@ function seed(): AppData {
     customExercises: [],
     lastWeights: {},
     favourites: [],
+    days: {},
+    foodFavourites: DEFAULT_FOOD_FAVOURITES.map((f) => ({ ...f })),
+    mealPlan: DEFAULT_MEAL_PLAN.map((d) => ({ ...d, meals: d.meals.map((m) => ({ ...m })) })),
+    nutrition: { ...DEFAULT_NUTRITION, targets: { ...DEFAULT_NUTRITION.targets } },
   };
 }
 
@@ -168,6 +173,76 @@ export const actions = {
       return { ...s, sessions, lastWeights };
     });
   },
+  // ───────────── Food ─────────────
+
+  /** The day's record, created empty the first time anything is logged on it. */
+  addFood(date: string, entry: FoodEntry) {
+    setState((s) => {
+      const day: DayRecord = s.days[date] ?? { date, food: [] };
+      return { ...s, days: { ...s.days, [date]: { ...day, food: [...day.food, entry] } } };
+    });
+  },
+  updateFood(date: string, entry: FoodEntry) {
+    setState((s) => {
+      const day = s.days[date];
+      if (!day) return s;
+      return { ...s, days: { ...s.days, [date]: { ...day, food: day.food.map((f) => (f.id === entry.id ? entry : f)) } } };
+    });
+  },
+  deleteFood(date: string, id: string) {
+    setState((s) => {
+      const day = s.days[date];
+      if (!day) return s;
+      return { ...s, days: { ...s.days, [date]: { ...day, food: day.food.filter((f) => f.id !== id) } } };
+    });
+  },
+
+  /** Log a meal-plan meal in one tap. The plan id rides along so it can be undone. */
+  logPlanMeal(date: string, meal: PlanMeal) {
+    const entry: FoodEntry = {
+      id: uid(),
+      slot: meal.slot,
+      name: meal.title,
+      quantity: "1 serving",
+      calories: meal.calories,
+      protein: meal.protein,
+      notes: meal.items.join(", "),
+      loggedAt: Date.now(),
+      planMealId: meal.id,
+    };
+    actions.addFood(date, entry);
+    return entry;
+  },
+  /** Undo: take back every entry that came from this plan meal today. */
+  unlogPlanMeal(date: string, planMealId: string) {
+    setState((s) => {
+      const day = s.days[date];
+      if (!day) return s;
+      return { ...s, days: { ...s.days, [date]: { ...day, food: day.food.filter((f) => f.planMealId !== planMealId) } } };
+    });
+  },
+
+  addFoodFavourite(fav: FoodFavourite) {
+    setState((s) => ({ ...s, foodFavourites: [...s.foodFavourites, fav] }));
+  },
+  updateFoodFavourite(fav: FoodFavourite) {
+    setState((s) => ({ ...s, foodFavourites: s.foodFavourites.map((f) => (f.id === fav.id ? fav : f)) }));
+  },
+  deleteFoodFavourite(id: string) {
+    setState((s) => ({ ...s, foodFavourites: s.foodFavourites.filter((f) => f.id !== id) }));
+  },
+  /** Count a tap, so the ones she really eats drift to the front. */
+  bumpFoodFavourite(id: string) {
+    setState((s) => ({ ...s, foodFavourites: s.foodFavourites.map((f) => (f.id === id ? { ...f, uses: f.uses + 1 } : f)) }));
+  },
+
+  updateNutrition(patch: Partial<NutritionSettings>) {
+    setState((s) => ({ ...s, nutrition: { ...s.nutrition, ...patch } }));
+  },
+  updateMealPlan(mealPlan: AppData["mealPlan"]) {
+    setState((s) => ({ ...s, mealPlan }));
+  },
+
   deleteSession(id: string) {
     setState((s) => ({ ...s, sessions: s.sessions.filter((x) => x.id !== id) }));
   },
