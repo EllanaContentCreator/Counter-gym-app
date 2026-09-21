@@ -54,6 +54,16 @@ export function readerIsPreconfigured() {
 }
 
 /**
+ * Another reader function sitting beside the sheet reader, e.g. read-food next
+ * to scan-sheet. Derived from the one address she already typed in — asking her
+ * to find and paste a second one is exactly how this goes wrong.
+ */
+export function readerSibling(fn: string, configured?: string) {
+  const base = readerEndpoint(configured);
+  return base ? base.replace(/\/[^/]*$/, `/${fn}`) : "";
+}
+
+/**
  * Some places can only hand out files — GitHub Pages is one — so the reader can
  * never live at the same address as the app there. Worth saying out loud rather
  * than letting it fail as a bare 404.
@@ -67,7 +77,7 @@ export function hostCanRunReader() {
 const SET_UP_HINT =
   "Open Me → Sheet reader and paste the address of your reader, e.g. https://your-site.netlify.app/.netlify/functions/scan-sheet";
 
-function fileToBase64(file: Blob): Promise<{ data: string; mediaType: string }> {
+export function fileToBase64(file: Blob): Promise<{ data: string; mediaType: string }> {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => {
