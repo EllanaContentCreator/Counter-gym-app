@@ -146,6 +146,7 @@ export default function Today() {
             <Card className="text-center text-sm text-ink-soft">No workouts logged yet. Your first one is the hardest — and the most important.</Card>
           ) : (
             <div className="space-y-2">
+              {/* Sessions often get written up days later, so there's a way in for those too. */}
               {recent.map((s) => (
                 <Link key={s.id} href={`/progress/${s.id}`} className="card tap flex items-center justify-between p-4">
                   <div>
@@ -159,6 +160,9 @@ export default function Today() {
               ))}
             </div>
           )}
+          <Link href="/log-past" className="tap mt-2 block text-center text-[12px] font-extrabold text-teal-700">
+            📅 Log a workout you've already done
+          </Link>
         </div>
 
         <p className="pb-2 text-center text-[11px] text-ink-mute">Built on Carolyn Counter's programs. Stay accountable. 💪</p>

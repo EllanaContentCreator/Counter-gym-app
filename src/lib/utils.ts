@@ -164,6 +164,38 @@ export function fromDateInput(v: string): number | null {
   return new Date(+m[1], +m[2] - 1, +m[3], 12).getTime();
 }
 
+/**
+ * Move a whole workout to another day, keeping its shape. The sets slide by the
+ * same amount as the start, so the order they were logged in — and the dates on
+ * any personal bests — stay true to the session.
+ */
+export function retimeSession(session: WorkoutSession, ts: number): WorkoutSession {
+  const delta = ts - session.startedAt;
+  if (!delta) return session;
+  return {
+    ...session,
+    startedAt: ts,
+    finishedAt: session.finishedAt == null ? null : session.finishedAt + delta,
+    entries: session.entries.map((e) => ({ ...e, completedAt: e.completedAt + delta })),
+  };
+}
+
+/** True only when the chosen day is after today — noon on today is not "the future". */
+export function isFutureDay(ts: number) {
+  return dayKey(ts) > dayKey(Date.now());
+}
+
+/**
+ * A believable clock time for a workout filed against a day. Dates from a date
+ * picker land at midday, which for today can still be hours away, so a session
+ * on today is pulled back far enough to have finished by now without ever
+ * sliding into the day before.
+ */
+export function dayAnchor(ts: number, durationSec: number) {
+  const dayStart = new Date(ts).setHours(0, 0, 0, 0);
+  return Math.min(ts, Math.max(dayStart, Date.now() - durationSec * 1000));
+}
+
 export function sessionsThisWeek(sessions: WorkoutSession[]) {
   const start = weekStart();
   return sessions.filter((s) => s.finishedAt && s.startedAt >= start);

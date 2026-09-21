@@ -66,9 +66,18 @@ export default function Progress() {
         </div>
 
         {tab === "history" && (done.length === 0 ? (
-          <Empty icon="📓" title="Nothing logged yet" body="Start a program from Today and your workouts will show up here." action={<Link href="/programs" className="font-bold text-teal-700">Go to programs →</Link>} />
+          <Empty
+            icon="📓"
+            title="Nothing logged yet"
+            body="Start a program from Today, or write up a session you've already done."
+            action={<Link href="/log-past" className="font-bold text-teal-700">Log a past workout →</Link>}
+          />
         ) : (
           <div className="space-y-2">
+            <Link href="/log-past" className="card tap flex items-center gap-3 border-2 border-dashed border-teal-200 bg-white/70 p-3 text-sm font-bold text-teal-700">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-teal-50 text-lg">📅</span>
+              Log a workout you've already done
+            </Link>
             {done.map((s) => (
               <Link key={s.id} href={`/progress/${s.id}`} className="card tap flex items-center gap-3 p-4">
                 <span className="text-2xl">{s.feeling ? FACE[s.feeling] : "💪"}</span>

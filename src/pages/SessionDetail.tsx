@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "wouter";
 import { useAppData, actions } from "@/lib/store";
-import { formatDate, formatClock, sessionVolume, findExercise } from "@/lib/utils";
+import { cn, dayAnchor, formatDate, formatClock, sessionVolume, findExercise, fromDateInput, isFutureDay, retimeSession, sheetDayLabel, toDateInput } from "@/lib/utils";
 import { Header } from "@/components/Header";
-import { Button, Card, Pill, Sheet } from "@/components/ui";
+import type { WorkoutSession } from "@/lib/types";
+import { Button, Card, Field, Pill, Sheet, inputCls } from "@/components/ui";
 import { ExerciseImage } from "@/components/ExerciseImage";
 
 const FACE = { 1: "😮‍💨 Rough", 2: "😐 Meh", 3: "🙂 OK", 4: "😄 Good", 5: "🔥 On fire" } as const;
@@ -14,6 +15,7 @@ export default function SessionDetail() {
   const [, nav] = useLocation();
   const s = data.sessions.find((x) => x.id === id);
   const [confirm, setConfirm] = useState(false);
+  const [dating, setDating] = useState(false);
   if (!s) return <div className="p-8 text-center">Session not found. <Link href="/progress" className="font-bold text-teal-700">Back</Link></div>;
   const groups = new Map<string, typeof s.entries>();
   for (const e of s.entries) groups.set(e.exerciseId, [...(groups.get(e.exerciseId) ?? []), e]);
@@ -27,7 +29,15 @@ export default function SessionDetail() {
   };
   return (
     <div className="safe-bottom">
-      <Header title={s.programName} back="/progress" sub={formatDate(s.startedAt, { weekday: "long", day: "numeric", month: "long", year: "numeric" })} />
+      <Header
+        title={s.programName}
+        back="/progress"
+        sub={
+          <button type="button" onClick={() => setDating(true)} className="tap font-semibold text-teal-700 underline decoration-teal-200 underline-offset-2">
+            {formatDate(s.startedAt, { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · change
+          </button>
+        }
+      />
       <div className="space-y-4 px-4 pt-1">
         <div className="grid grid-cols-3 gap-2">
           <Card className="text-center"><div className="display text-[26px] text-teal-700">{formatClock(s.durationSec)}</div><div className="text-[10px] font-bold uppercase text-ink-mute">Time</div></Card>
@@ -61,6 +71,8 @@ export default function SessionDetail() {
           <Button variant="danger" onClick={() => setConfirm(true)}>Delete</Button>
         </div>
       </div>
+      <ChangeDate session={s} open={dating} onClose={() => setDating(false)} />
+
       <Sheet open={confirm} onClose={() => setConfirm(false)} title="Delete this workout?">
         <div className="mt-2 grid grid-cols-2 gap-2">
           <Button variant="secondary" onClick={() => setConfirm(false)}>Keep</Button>
@@ -68,5 +80,61 @@ export default function SessionDetail() {
         </div>
       </Sheet>
     </div>
+  );
+}
+
+/**
+ * Workouts get written up late — the day after, or at the end of the week — so
+ * the date on one can be moved to the day it actually happened.
+ */
+function ChangeDate({ session, open, onClose }: { session: WorkoutSession; open: boolean; onClose: () => void }) {
+  const [date, setDate] = useState(() => toDateInput(session.startedAt));
+  useEffect(() => {
+    if (open) setDate(toDateInput(session.startedAt));
+  }, [open, session.startedAt]);
+  const ts = fromDateInput(date);
+  const inFuture = ts != null && isFutureDay(ts);
+  return (
+    <Sheet open={open} onClose={onClose} title="When did you do this?">
+      <div className="space-y-3">
+        <Field label="Date">
+          <input type="date" className={inputCls} value={date} max={toDateInput(Date.now())} onChange={(e) => setDate(e.target.value)} />
+        </Field>
+        <div className="scroll-x -mx-5 flex gap-2 px-5">
+          {Array.from({ length: 10 }).map((_, i) => {
+            const day = Date.now() - i * 864e5;
+            const v = toDateInput(day);
+            return (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setDate(v)}
+                className={cn(
+                  "tap shrink-0 rounded-full px-3 py-1.5 text-xs font-bold",
+                  date === v ? "grad-teal text-white shadow-[var(--shadow-pop)]" : "bg-white text-ink-soft shadow-card",
+                )}
+              >
+                {i === 0 ? "Today" : i === 1 ? "Yesterday" : sheetDayLabel(day)}
+              </button>
+            );
+          })}
+        </div>
+        {inFuture && <p className="text-[11px] font-semibold text-coral-600">That day hasn't happened yet.</p>}
+        <p className="text-[11px] text-ink-mute">The sets move with it, so this workout counts towards that week instead.</p>
+        <div className="grid grid-cols-2 gap-2">
+          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button
+            disabled={ts == null || inFuture}
+            onClick={() => {
+              if (ts == null || inFuture) return;
+              actions.saveSession(retimeSession(session, dayAnchor(ts, session.durationSec)));
+              onClose();
+            }}
+          >
+            Save the date
+          </Button>
+        </div>
+      </div>
+    </Sheet>
   );
 }

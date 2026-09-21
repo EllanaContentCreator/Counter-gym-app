@@ -12,6 +12,7 @@ import ExerciseDetail from "@/pages/ExerciseDetail";
 import Workout from "@/pages/Workout";
 import Progress from "@/pages/Progress";
 import SessionDetail from "@/pages/SessionDetail";
+import LogPast from "@/pages/LogPast";
 import Timer from "@/pages/Timer";
 import Settings from "@/pages/Settings";
 import Onboarding from "@/pages/Onboarding";
@@ -86,6 +87,7 @@ export default function App() {
         <Route path="/library/:id" component={ExerciseDetail} />
         <Route path="/workout" component={Workout} />
         <Route path="/progress" component={Progress} />
+        <Route path="/log-past" component={LogPast} />
         <Route path="/progress/:id" component={SessionDetail} />
         <Route path="/timer" component={Timer} />
         <Route path="/settings" component={Settings} />
