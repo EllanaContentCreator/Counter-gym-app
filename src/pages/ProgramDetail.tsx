@@ -169,18 +169,16 @@ export default function ProgramDetail() {
 
         {program.notes && !editing && <p className="rounded-xl bg-teal-50 px-3 py-2 text-sm text-teal-900">{program.notes}</p>}
 
-        {(program.photoIds?.length || editing) ? (
-          <div className={cn(editing && "card p-3")}>
-            {editing && (
-              <div className="mb-2 flex items-center justify-between">
-                <div className="text-[11px] font-extrabold uppercase tracking-widest text-ink-mute">Carolyn's sheet photo</div>
-                {program.photoIds?.length ? <span className="text-[11px] font-semibold text-ink-soft">Tap to zoom while you type</span> : null}
-              </div>
-            )}
-            {!editing && program.photoIds?.length ? <div className="mb-1 text-[11px] font-extrabold uppercase tracking-widest text-ink-mute">Carolyn's sheet</div> : null}
-            <SheetPhotos program={program} editing={editing} />
+        {/* While typing rows in, the photo belongs at the top to read off. */}
+        {editing && (
+          <div className="card p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="text-[11px] font-extrabold uppercase tracking-widest text-ink-mute">Carolyn's sheet photo</div>
+              {program.photoIds?.length ? <span className="text-[11px] font-semibold text-ink-soft">Tap to zoom while you type</span> : null}
+            </div>
+            <SheetPhotos program={program} editing />
           </div>
-        ) : null}
+        )}
 
         <SheetTable program={working} custom={data.customExercises} editing={editing} onEdit={editing ? (r) => setRow(r) : undefined} />
 
@@ -235,6 +233,17 @@ export default function ProgramDetail() {
             </div>
           </div>
         )}
+
+        {/*
+         * The exercises are what you come to this page for, so the photo of the
+         * original sheet sits underneath them rather than in front of them.
+         */}
+        {!editing && program.photoIds?.length ? (
+          <div className="pt-1">
+            <div className="mb-1 text-[11px] font-extrabold uppercase tracking-widest text-ink-mute">Carolyn's sheet</div>
+            <SheetPhotos program={program} editing={false} />
+          </div>
+        ) : null}
       </div>
 
       <ExercisePicker open={picking} onClose={() => setPicking(false)} onPick={pick} />
