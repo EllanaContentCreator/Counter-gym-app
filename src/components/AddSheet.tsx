@@ -4,8 +4,10 @@ import { useAppData, actions, uid } from "@/lib/store";
 import { savePhoto } from "@/lib/photos";
 import { fromDateInput, sheetDayLabel, toDateInput, weekStart, programsThisWeek, cn } from "@/lib/utils";
 import { matchRows, scanSheet, type MatchedRow, type ScannedSheet } from "@/lib/scan";
-import type { Program } from "@/lib/types";
+import type { Exercise, Program } from "@/lib/types";
 import { Button, Field, Sheet, inputCls } from "./ui";
+import { ExerciseImage } from "./ExerciseImage";
+import { ExercisePicker } from "./ExercisePicker";
 import { PhotoPickButtons } from "./SheetPhotos";
 import { SlotBadge } from "@/pages/ProgramDetail";
 import { IconCheck, IconClose, IconSpark, IconTrash } from "./Icons";
@@ -167,6 +169,15 @@ export function AddSheetFlow({ open, onClose }: { open: boolean; onClose: () => 
                 sheet={scanned}
                 matched={matched}
                 onRemove={(i) => setMatched((m) => m.filter((_, j) => j !== i))}
+                onRepick={(i, ex) =>
+                  setMatched((m) =>
+                    m.map((row, j) =>
+                      j === i
+                        ? { ...row, exercise: ex, isNew: false, confidence: 1, row: { ...row.row, exerciseId: ex.id, label: row.readName } }
+                        : row,
+                    ),
+                  )
+                }
                 onRedo={() => { setScanned(null); setMatched([]); }}
               />
             )}
@@ -207,8 +218,22 @@ export function AddSheetFlow({ open, onClose }: { open: boolean; onClose: () => 
   );
 }
 
-function ReadRows({ sheet, matched, onRemove, onRedo }: { sheet: ScannedSheet; matched: MatchedRow[]; onRemove: (i: number) => void; onRedo: () => void }) {
+function ReadRows({
+  sheet,
+  matched,
+  onRemove,
+  onRepick,
+  onRedo,
+}: {
+  sheet: ScannedSheet;
+  matched: MatchedRow[];
+  onRemove: (i: number) => void;
+  onRepick: (i: number, exercise: Exercise) => void;
+  onRedo: () => void;
+}) {
   const newCount = matched.filter((m) => m.isNew).length;
+  // Which row is having its exercise changed, if any.
+  const [picking, setPicking] = useState<number | null>(null);
   return (
     <div className="space-y-2">
       <div className={cn("rounded-xl px-3 py-2 text-[12px] font-semibold", sheet.confidence === "low" ? "bg-coral-100 text-coral-700" : "bg-lime-100 text-[#3f6f18]")}>
@@ -220,8 +245,15 @@ function ReadRows({ sheet, matched, onRemove, onRedo }: { sheet: ScannedSheet; m
         {matched.map((m, i) => (
           <div key={m.row.id} className="flex items-start gap-2 border-t border-sand px-2.5 py-2 first:border-t-0">
             <div className="pt-0.5"><SlotBadge row={m.row} /></div>
+            <ExerciseImage exercise={m.exercise} size="sm" className="mt-0.5" />
             <div className="min-w-0 flex-1">
               <div className="text-[13px] font-bold leading-tight">{m.row.label || m.exercise.name}</div>
+              {/* When her wording differs from the library's, say which exercise it was matched to. */}
+              {m.row.label && (
+                <div className="mt-0.5 text-[11px] font-semibold leading-tight text-ink-soft">
+                  {m.isNew ? "New exercise" : `Matched to ${m.exercise.name}`}
+                </div>
+              )}
               <div className="mt-0.5 flex flex-wrap gap-1 text-[10px] font-bold uppercase tracking-wide text-ink-mute">
                 {m.row.weight && <span className="rounded bg-sand px-1.5 py-0.5">{m.row.weight}</span>}
                 {m.row.sets && <span className="rounded bg-sand px-1.5 py-0.5">{m.row.sets}</span>}
@@ -229,6 +261,9 @@ function ReadRows({ sheet, matched, onRemove, onRedo }: { sheet: ScannedSheet; m
                 {m.row.rest && <span className="rounded bg-sand px-1.5 py-0.5">{m.row.rest}</span>}
                 {m.isNew && <span className="rounded bg-plum-100 px-1.5 py-0.5 text-plum-700">New exercise</span>}
               </div>
+              <button type="button" onClick={() => setPicking(i)} className="tap mt-1 text-[11px] font-extrabold text-teal-700">
+                {m.isNew ? "Use one of mine instead" : "Not this one — change"}
+              </button>
             </div>
             <button type="button" onClick={() => onRemove(i)} aria-label="Remove row" className="tap mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sand text-ink-soft"><IconTrash size={14} /></button>
           </div>
@@ -239,6 +274,15 @@ function ReadRows({ sheet, matched, onRemove, onRedo }: { sheet: ScannedSheet; m
         <span>{newCount > 0 ? `${newCount} new exercise${newCount === 1 ? "" : "s"} will be added to your library.` : "All matched to exercises you already have."}</span>
         <button type="button" onClick={onRedo} className="font-bold text-teal-700">Read again</button>
       </div>
+
+      <ExercisePicker
+        open={picking !== null}
+        onClose={() => setPicking(null)}
+        onPick={(ex) => {
+          if (picking !== null) onRepick(picking, ex);
+          setPicking(null);
+        }}
+      />
     </div>
   );
 }
