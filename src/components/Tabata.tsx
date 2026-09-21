@@ -4,7 +4,7 @@ import { cn, formatClock } from "@/lib/utils";
 import { Button } from "./ui";
 
 export interface TabataConfig { work: number; rest: number; rounds: number; prep: number }
-export const DEFAULT_TABATA: TabataConfig = { work: 20, rest: 10, rounds: 8, prep: 10 };
+export const DEFAULT_TABATA: TabataConfig = { work: 20, rest: 10, rounds: 8, prep: 5 };
 
 /** Full-screen Tabata timer. Wall-clock based so it stays accurate if the phone dims. */
 export function TabataOverlay({ title, config = DEFAULT_TABATA, sound = true, onDone, onClose }: { title: string; config?: TabataConfig; sound?: boolean; onDone: () => void; onClose: () => void }) {

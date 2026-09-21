@@ -41,8 +41,8 @@ export default function Timer() {
             </div>
             <div className="flex gap-2">
               <Button variant="secondary" size="sm" onClick={() => setCfg(DEFAULT_TABATA)}>Classic 20/10 × 8</Button>
-              <Button variant="secondary" size="sm" onClick={() => setCfg({ work: 40, rest: 20, rounds: 6, prep: 10 })}>40/20 × 6</Button>
-              <Button variant="secondary" size="sm" onClick={() => setCfg({ work: 30, rest: 30, rounds: 8, prep: 10 })}>30/30 × 8</Button>
+              <Button variant="secondary" size="sm" onClick={() => setCfg({ work: 40, rest: 20, rounds: 6, prep: 5 })}>40/20 × 6</Button>
+              <Button variant="secondary" size="sm" onClick={() => setCfg({ work: 30, rest: 30, rounds: 8, prep: 5 })}>30/30 × 8</Button>
             </div>
             <Button full variant="mustard" size="lg" onClick={() => setTabataOpen(true)}>▶ Start tabata · {formatClock(cfg.rounds * (cfg.work + cfg.rest))}</Button>
           </Card>

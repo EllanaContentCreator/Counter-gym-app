@@ -12,11 +12,14 @@ export function beep(kind: "tick" | "go" | "rest" | "done" = "tick", enabled = t
   try {
     const c = audio();
     if (c.state === "suspended") void c.resume();
+    // One family of crisp beeps, same voice as the 3-2-1 countdown tick.
+    // "go" and "rest" are single longer beeps, high for work and low for rest,
+    // rather than a sliding two-tone that reads as a whistle.
     const pattern: Array<[number, number, number]> =
       kind === "tick" ? [[880, 0, 0.08]]
-      : kind === "go" ? [[660, 0, 0.12], [990, 0.14, 0.18]]
-      : kind === "rest" ? [[520, 0, 0.18]]
-      : [[660, 0, 0.12], [830, 0.14, 0.12], [1046, 0.28, 0.3]];
+      : kind === "go" ? [[1046, 0, 0.45]]
+      : kind === "rest" ? [[587, 0, 0.32]]
+      : [[880, 0, 0.1], [880, 0.16, 0.1], [1175, 0.32, 0.45]];
     for (const [freq, delay, dur] of pattern) {
       const o = c.createOscillator();
       const g = c.createGain();
