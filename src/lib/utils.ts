@@ -292,3 +292,45 @@ export function bandState(value: number, band: [number, number]): "under" | "ins
   if (value > band[1]) return "over";
   return "inside";
 }
+
+// ───────────── Weight ─────────────
+
+export interface WeighIn {
+  /** YYYY-MM-DD */
+  date: string;
+  ts: number;
+  kg: number;
+}
+
+/** Every weigh-in, oldest first. Days without one simply aren't there. */
+export function weighIns(days: Record<string, DayRecord>): WeighIn[] {
+  return Object.values(days)
+    .filter((d): d is DayRecord & { weight: number } => typeof d.weight === "number")
+    .map((d) => ({ date: d.date, ts: fromDateInput(d.date) ?? 0, kg: d.weight }))
+    .sort((a, b) => a.ts - b.ts);
+}
+
+/**
+ * Where she is against the goal.
+ *
+ * With no weigh-ins yet, the starting weight stands in as "current", so the
+ * screen shows the whole journey ahead rather than a row of dashes.
+ */
+export function weightProgress(days: Record<string, DayRecord>, start: number, goal: number) {
+  const list = weighIns(days);
+  const latest = list.length ? list[list.length - 1] : undefined;
+  const current = latest?.kg ?? start;
+  const lost = start - current;
+  const toGo = current - goal;
+  const total = start - goal;
+  return {
+    list,
+    latest,
+    current,
+    lost,
+    toGo,
+    total,
+    /** 0-1 of the way from start to goal, clamped. */
+    fraction: total === 0 ? 1 : Math.max(0, Math.min(1, lost / total)),
+  };
+}

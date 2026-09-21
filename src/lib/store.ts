@@ -222,6 +222,39 @@ export const actions = {
     });
   },
 
+  // ───────────── Water and weight ─────────────
+
+  /** Add (or take off, with a negative) millilitres. Never goes below zero. */
+  addWater(date: string, ml: number) {
+    setState((s) => {
+      const day: DayRecord = s.days[date] ?? { date, food: [] };
+      const water = Math.max(0, (day.water ?? 0) + ml);
+      return { ...s, days: { ...s.days, [date]: { ...day, water } } };
+    });
+  },
+  setWater(date: string, ml: number) {
+    setState((s) => {
+      const day: DayRecord = s.days[date] ?? { date, food: [] };
+      return { ...s, days: { ...s.days, [date]: { ...day, water: Math.max(0, ml) } } };
+    });
+  },
+
+  /** Weigh-ins happen whenever she feels like it, so a day may have none. */
+  setWeight(date: string, kg: number) {
+    setState((s) => {
+      const day: DayRecord = s.days[date] ?? { date, food: [] };
+      return { ...s, days: { ...s.days, [date]: { ...day, weight: kg } } };
+    });
+  },
+  clearWeight(date: string) {
+    setState((s) => {
+      const day = s.days[date];
+      if (!day) return s;
+      const { weight: _drop, ...rest } = day;
+      return { ...s, days: { ...s.days, [date]: rest as DayRecord } };
+    });
+  },
+
   addFoodFavourite(fav: FoodFavourite) {
     setState((s) => ({ ...s, foodFavourites: [...s.foodFavourites, fav] }));
   },

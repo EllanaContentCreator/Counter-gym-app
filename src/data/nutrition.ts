@@ -17,7 +17,11 @@ export const DEFAULT_NUTRITION: NutritionSettings = {
   targets: DEFAULT_TARGETS,
   startWeight: 82,
   goalWeight: 75,
+  waterTarget: 2000,
 };
+
+/** The two taps that cover almost every drink, plus a custom amount. */
+export const WATER_STEPS = [250, 500] as const;
 
 export const DAY_TYPE_LABEL: Record<DayType, string> = {
   strength: "Strength",

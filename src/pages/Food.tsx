@@ -15,6 +15,7 @@ import {
 import { Header, TimerButton } from "@/components/Header";
 import { Button, Card, Empty, Pill } from "@/components/ui";
 import { FoodSheet, draftFrom, emptyDraft, entryFromDraft, type FoodDraft } from "@/components/FoodSheet";
+import { WaterCard } from "@/components/Water";
 import { IconBack, IconCheck, IconNext, IconPlus, IconStar, IconTrash } from "@/components/Icons";
 
 /**
@@ -168,6 +169,8 @@ export default function Food() {
           <TargetBar label="Calories" value={totals.calories} band={target.calories} unit="" tone="teal" />
           <TargetBar label="Protein" value={totals.protein} band={target.protein} unit="g" tone="coral" />
         </div>
+        <WaterCard date={key} ml={day.water ?? 0} target={data.nutrition.waterTarget} />
+
         {(totals.carbs > 0 || totals.fat > 0) && (
           <div className="flex justify-center gap-4 text-[11px] font-bold uppercase tracking-wide text-ink-mute">
             <span>Carbs {Math.round(totals.carbs)}g</span>

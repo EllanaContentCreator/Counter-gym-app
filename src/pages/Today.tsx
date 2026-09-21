@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useAppData } from "@/lib/store";
-import { greeting, quoteOfTheDay, nextProgram, sessionsThisWeek, weekStreak, programSummary, formatDate, formatDuration, findExercise, rowName, programsThisWeek, programDate, dayRecord, dayTypeFor, foodTotals, planForDay, targetFor, cn } from "@/lib/utils";
+import { useAppData, actions } from "@/lib/store";
+import { greeting, quoteOfTheDay, nextProgram, sessionsThisWeek, weekStreak, programSummary, formatDate, formatDuration, findExercise, rowName, programsThisWeek, programDate, dayRecord, dayTypeFor, foodTotals, planForDay, targetFor, cn, dayKey, weightProgress } from "@/lib/utils";
 import { Header, TimerButton } from "@/components/Header";
 import { Button, Card, GoalRing, Pill, SectionTitle, Stat } from "@/components/ui";
 import { ExerciseImage } from "@/components/ExerciseImage";
@@ -9,7 +9,7 @@ import { PhotoThumb } from "@/components/SheetPhotos";
 import { AddSheetFlow } from "@/components/AddSheet";
 import { IconCamera, IconCheck, IconDumbbell, IconFlame, IconNext, IconPlay, IconSheet, IconTimer, IconTrophy } from "@/components/Icons";
 import { startSession } from "@/lib/session";
-import { DAY_TYPE_LABEL } from "@/data/nutrition";
+import { DAY_TYPE_LABEL, WATER_STEPS } from "@/data/nutrition";
 
 export default function Today() {
   const data = useAppData();
@@ -32,6 +32,11 @@ export default function Today() {
   const plan = planForDay(data.mealPlan, Date.now());
   const mealsPlanned = plan?.meals.filter((m) => !m.optional).length ?? 0;
   const mealsDone = new Set(today.food.map((f) => f.planMealId).filter(Boolean)).size;
+  const todayKey = dayKey(Date.now());
+  const water = today.water ?? 0;
+  const waterTarget = data.nutrition.waterTarget;
+  const wp = weightProgress(data.days, data.nutrition.startWeight, data.nutrition.goalWeight);
+  const unit = data.profile.unit;
 
   const begin = (mode: "free" | "guided45") => {
     if (!next) return;
@@ -138,7 +143,8 @@ export default function Today() {
          * Exercise calories are never added back on — the two are meant to work
          * together, not cancel each other out.
          */}
-        <Link href="/food" className="card tap block p-4">
+        <Card className="p-4">
+          <Link href="/food" className="tap block">
           <div className="flex items-baseline justify-between">
             <div className="display text-[20px]">Food today</div>
             <Pill tone={dayType === "strength" ? "coral" : dayType === "fasting" ? "ink" : "teal"}>{DAY_TYPE_LABEL[dayType]} day</Pill>
@@ -172,6 +178,59 @@ export default function Today() {
                 : `${today.food.length} thing${today.food.length === 1 ? "" : "s"} logged${mealsPlanned ? ` · ${mealsDone}/${mealsPlanned} planned meals` : ""}`}
             </span>
             <span className="font-extrabold text-teal-700">Open <IconNext size={12} className="inline" /></span>
+          </div>
+          </Link>
+
+          {/* Water, with the two taps that cover most drinks right here. */}
+          <div className="mt-3 border-t border-sand pt-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-extrabold uppercase tracking-wide text-ink-mute">Water</span>
+              <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-sand">
+                <span className="absolute inset-y-0 left-0 rounded-full grad-sky" style={{ width: `${Math.min(100, waterTarget ? (water / waterTarget) * 100 : 0)}%` }} />
+              </div>
+              <span className="shrink-0 text-[11px] font-extrabold text-sky-600">{(water / 1000).toFixed(2)} / {(waterTarget / 1000).toFixed(1)} L</span>
+            </div>
+            <div className="mt-2 flex gap-2">
+              {WATER_STEPS.map((step) => (
+                <button
+                  key={step}
+                  type="button"
+                  onClick={() => actions.addWater(todayKey, step)}
+                  className="tap flex-1 rounded-xl bg-sky-100 py-2 text-[12px] font-extrabold text-sky-600 active:brightness-95"
+                >
+                  +{step} ml
+                </button>
+              ))}
+            </div>
+          </div>
+        </Card>
+
+        {/* Body: where the scales are up to, and a way in to the graph. */}
+        <Link href="/progress/weight" className="card tap block p-4">
+          <div className="flex items-baseline justify-between">
+            <div className="display text-[20px]">Body</div>
+            <span className="text-xs text-ink-soft">{wp.latest ? `Last weighed ${formatDate(wp.latest.ts)}` : "No weigh-ins yet"}</span>
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <div className="text-center">
+              <div className="display text-[24px] leading-none text-teal-700">{wp.current.toFixed(1)}</div>
+              <div className="mt-1 text-[10px] font-bold uppercase text-ink-mute">Now ({unit})</div>
+            </div>
+            <div className="text-center">
+              <div className={cn("display text-[24px] leading-none", wp.lost > 0 ? "text-coral-500" : "text-ink-mute")}>{wp.lost > 0 ? wp.lost.toFixed(1) : "—"}</div>
+              <div className="mt-1 text-[10px] font-bold uppercase text-ink-mute">Lost ({unit})</div>
+            </div>
+            <div className="text-center">
+              <div className="display text-[24px] leading-none">{Math.max(0, wp.toGo).toFixed(1)}</div>
+              <div className="mt-1 text-[10px] font-bold uppercase text-ink-mute">To go ({unit})</div>
+            </div>
+          </div>
+          <div className="relative mt-3 h-2 overflow-hidden rounded-full bg-sand">
+            <span className="absolute inset-y-0 left-0 rounded-full grad-teal" style={{ width: `${wp.fraction * 100}%` }} />
+          </div>
+          <div className="mt-1.5 flex items-center justify-between text-[11px] font-semibold text-ink-mute">
+            <span>{data.nutrition.startWeight}{unit} start · {data.nutrition.goalWeight}{unit} goal</span>
+            <span className="font-extrabold text-teal-700">{wp.latest ? "Weigh in" : "Add your first"} <IconNext size={12} className="inline" /></span>
           </div>
         </Link>
 

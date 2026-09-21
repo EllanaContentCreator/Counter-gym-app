@@ -4,6 +4,8 @@ import { Header } from "@/components/Header";
 import { Button, Card, Field, Sheet, inputCls, cnHelper } from "@/components/ui";
 import { IconImage, IconSpark } from "@/components/Icons";
 import { readerEndpoint } from "@/lib/scan";
+import { DAY_TYPE_LABEL } from "@/data/nutrition";
+import type { DayType } from "@/lib/types";
 
 export default function Settings() {
   const data = useAppData();
@@ -12,6 +14,18 @@ export default function Settings() {
   const [msg, setMsg] = useState("");
   const [confirmReset, setConfirmReset] = useState(false);
   const isStandalone = typeof window !== "undefined" && (window.matchMedia("(display-mode: standalone)").matches || (navigator as { standalone?: boolean }).standalone);
+
+  const n = data.nutrition;
+  /** Numbers typed into a box: a blank or a scribble leaves the old value alone. */
+  const numOr = (v: string, fallback: number) => {
+    const parsed = parseFloat(v.replace(/[^\d.]/g, ""));
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+  const setBand = (type: DayType, which: "calories" | "protein", end: 0 | 1, v: string) => {
+    const band = [...n.targets[type][which]] as [number, number];
+    band[end] = numOr(v, band[end]);
+    actions.updateNutrition({ targets: { ...n.targets, [type]: { ...n.targets[type], [which]: band } } });
+  };
 
   const [busy, setBusy] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -85,6 +99,53 @@ export default function Settings() {
             <span className="font-bold">Beeps & chimes</span>
             <input type="checkbox" checked={p.soundOn} onChange={(e) => actions.updateProfile({ soundOn: e.target.checked })} className="h-6 w-6 accent-teal-700" />
           </label>
+        </Card>
+
+        <Card className="space-y-4">
+          <div className="display text-[22px]">Nutrition targets</div>
+          <p className="text-sm text-ink-soft">Every number here is yours to change. Targets are a band to land inside rather than one figure to hit exactly.</p>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={`Starting weight (${p.unit})`}>
+              <input className={inputCls} inputMode="decimal" defaultValue={n.startWeight} onBlur={(e) => actions.updateNutrition({ startWeight: numOr(e.target.value, n.startWeight) })} />
+            </Field>
+            <Field label={`Goal weight (${p.unit})`}>
+              <input className={inputCls} inputMode="decimal" defaultValue={n.goalWeight} onBlur={(e) => actions.updateNutrition({ goalWeight: numOr(e.target.value, n.goalWeight) })} />
+            </Field>
+          </div>
+
+          <Field label="Water target" hint="Millilitres a day">
+            <div className="flex gap-2">
+              {[1500, 2000, 2500, 3000].map((ml) => (
+                <button key={ml} onClick={() => actions.updateNutrition({ waterTarget: ml })} className={cnHelper("tap h-11 flex-1 rounded-xl text-sm font-extrabold", n.waterTarget === ml ? "bg-teal-700 text-white" : "bg-sand text-ink-soft")}>
+                  {(ml / 1000).toFixed(1)}L
+                </button>
+              ))}
+            </div>
+          </Field>
+
+          {(Object.keys(n.targets) as DayType[]).map((type) => (
+            <div key={type} className="rounded-2xl bg-sand/60 p-3">
+              <div className="text-[11px] font-extrabold uppercase tracking-widest text-ink-mute">{DAY_TYPE_LABEL[type]} days</div>
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                <Field label="Calories">
+                  <div className="flex items-center gap-1.5">
+                    <input className={inputCls} inputMode="numeric" defaultValue={n.targets[type].calories[0]} onBlur={(e) => setBand(type, "calories", 0, e.target.value)} />
+                    <span className="text-sm font-bold text-ink-mute">–</span>
+                    <input className={inputCls} inputMode="numeric" defaultValue={n.targets[type].calories[1]} onBlur={(e) => setBand(type, "calories", 1, e.target.value)} />
+                  </div>
+                </Field>
+                <Field label="Protein (g)">
+                  <div className="flex items-center gap-1.5">
+                    <input className={inputCls} inputMode="numeric" defaultValue={n.targets[type].protein[0]} onBlur={(e) => setBand(type, "protein", 0, e.target.value)} />
+                    <span className="text-sm font-bold text-ink-mute">–</span>
+                    <input className={inputCls} inputMode="numeric" defaultValue={n.targets[type].protein[1]} onBlur={(e) => setBand(type, "protein", 1, e.target.value)} />
+                  </div>
+                </Field>
+              </div>
+            </div>
+          ))}
+          <p className="text-[11px] text-ink-mute">Exercise calories are never added back onto these — food and training are meant to work together, not cancel each other out.</p>
         </Card>
 
         <Card className="space-y-3">

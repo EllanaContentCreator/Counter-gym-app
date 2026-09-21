@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, useLocation, useSearch } from "wouter";
+import { Link, useLocation, useParams } from "wouter";
 import { useAppData, actions, uid } from "@/lib/store";
 import {
   cn,
@@ -60,8 +60,8 @@ function lineFor(row: ProgramRow, lastWeights: Record<string, string>, defaultRo
 export default function LogPast() {
   const data = useAppData();
   const [, nav] = useLocation();
-  const search = useSearch();
-  const presetProgram = new URLSearchParams(search).get("program");
+  // Arriving from a sheet's "I've already done this" preselects that sheet.
+  const { program: presetProgram } = useParams<{ program?: string }>();
 
   const programs = useMemo(() => [...data.programs].sort((a, b) => b.number - a.number), [data.programs]);
   const yesterday = Date.now() - 864e5;

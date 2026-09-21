@@ -148,6 +148,10 @@ export interface FoodFavourite {
 export interface DayRecord {
   date: string;
   food: FoodEntry[];
+  /** Millilitres drunk. */
+  water?: number;
+  /** Weighed on this day. Missing on the days she didn't step on the scales. */
+  weight?: number;
 }
 
 /** A target is a band to land inside, not a line to go over. */
@@ -183,6 +187,8 @@ export interface NutritionSettings {
   targets: Record<DayType, TargetBand>;
   startWeight: number;
   goalWeight: number;
+  /** Millilitres a day to aim for. */
+  waterTarget: number;
 }
 
 export interface Profile {

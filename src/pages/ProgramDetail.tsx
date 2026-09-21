@@ -195,7 +195,7 @@ export default function ProgramDetail() {
               <Button variant="secondary" onClick={() => { const nid = actions.duplicateProgram(program.id); if (nid) nav(`/programs/${nid}/edit`); }}><IconCopy size={16} /> Duplicate</Button>
             </div>
             {/* Already done this one? Write it up against the day it happened. */}
-            <Button full variant="ghost" onClick={() => nav(`/log-past?program=${program.id}`)}>
+            <Button full variant="ghost" onClick={() => nav(`/log-past/${program.id}`)}>
               📅 I've already done this — log it
             </Button>
           </div>
