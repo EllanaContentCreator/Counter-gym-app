@@ -3,7 +3,7 @@ import { useAppData, actions } from "@/lib/store";
 import { Header } from "@/components/Header";
 import { Button, Card, Field, Sheet, inputCls, cnHelper } from "@/components/ui";
 import { IconImage, IconSpark } from "@/components/Icons";
-import { readerEndpoint } from "@/lib/scan";
+import { hostCanRunReader, readerEndpoint } from "@/lib/scan";
 import { DAY_TYPE_LABEL } from "@/data/nutrition";
 import type { DayType } from "@/lib/types";
 
@@ -183,6 +183,14 @@ export default function Settings() {
             <div className="display text-[22px]">Sheet reader</div>
           </div>
           <p className="text-sm text-ink-soft">Reads Carolyn's sheet off a photo so nobody has to type the rows in. Leave the address blank if Counter and the reader are on the same site.</p>
+          {/* Saying this here beats letting it fail later as a bare 404. */}
+          {!hostCanRunReader() && !p.readerUrl?.trim() && (
+            <div className="rounded-xl bg-mustard-100 px-3 py-2.5 text-[13px] font-semibold text-ink-soft">
+              This copy of Counter is on <b>{window.location.hostname}</b>, which can only hand out files — it can't run the
+              reader itself. Reading a sheet from a photo needs a small server, so paste that server's address below.
+              Everything else in Counter works here exactly as it should.
+            </div>
+          )}
           <Field label="Reader address" hint={`Blank means ${readerEndpoint()}`}>
             <input className={inputCls} value={p.readerUrl ?? ""} onChange={(e) => actions.updateProfile({ readerUrl: e.target.value })} placeholder="https://your-site.netlify.app/.netlify/functions/scan-sheet" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
           </Field>

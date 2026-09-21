@@ -29,6 +29,20 @@ export function readerEndpoint(configured?: string) {
   return `${window.location.origin}/.netlify/functions/scan-sheet`;
 }
 
+/**
+ * Some places can only hand out files — GitHub Pages is one — so the reader can
+ * never live at the same address as the app there. Worth saying out loud rather
+ * than letting it fail as a bare 404.
+ */
+export function hostCanRunReader() {
+  if (typeof window === "undefined") return true;
+  const h = window.location.hostname;
+  return !(h.endsWith("github.io") || h.endsWith("pages.dev") || h.endsWith("surge.sh"));
+}
+
+const SET_UP_HINT =
+  "Open Me → Sheet reader and paste the address of your reader, e.g. https://your-site.netlify.app/.netlify/functions/scan-sheet";
+
 function fileToBase64(file: Blob): Promise<{ data: string; mediaType: string }> {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
@@ -46,6 +60,12 @@ function fileToBase64(file: Blob): Promise<{ data: string; mediaType: string }> 
 export async function scanSheet(file: Blob, opts: { endpoint?: string; passcode?: string } = {}): Promise<ScannedSheet> {
   const url = readerEndpoint(opts.endpoint);
   if (!url) throw new Error("No sheet reader is set up yet. Add its address in Me → Sheet reader.");
+  // Nothing to be gained from posting a photo to an address that cannot answer.
+  if (!opts.endpoint?.trim() && !hostCanRunReader()) {
+    throw new Error(
+      `This copy of Counter is on ${window.location.hostname}, which can only serve files — it can't run the sheet reader itself. ${SET_UP_HINT}`,
+    );
+  }
   const { data, mediaType } = await fileToBase64(file);
   let res: Response;
   try {
@@ -58,7 +78,20 @@ export async function scanSheet(file: Blob, opts: { endpoint?: string; passcode?
     throw new Error("Couldn't reach the sheet reader. Check you're online, and the address in Me → Sheet reader.");
   }
   const body = (await res.json().catch(() => ({}))) as { sheet?: ScannedSheet; error?: string };
-  if (!res.ok || !body.sheet) throw new Error(body.error || `The reader answered with an error (${res.status}).`);
+  if (!res.ok || !body.sheet) {
+    // A status on its own tells her nothing she can act on.
+    if (res.status === 404) throw new Error(`There's no sheet reader at ${url}. ${SET_UP_HINT}`);
+    if (res.status === 401 || res.status === 403) {
+      throw new Error("The sheet reader turned that away — check the group passcode in Me → Sheet reader.");
+    }
+    if (res.status === 402 || /credit|balance|quota/i.test(body.error ?? "")) {
+      throw new Error("The reader's Anthropic account is out of credit. Top it up and try again.");
+    }
+    if (res.status >= 500) {
+      throw new Error(body.error || "The sheet reader hit a problem at its end. Try again in a moment.");
+    }
+    throw new Error(body.error || `The reader answered with an error (${res.status}).`);
+  }
   return body.sheet;
 }
 
