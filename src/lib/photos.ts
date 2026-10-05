@@ -38,10 +38,10 @@ function tx<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequ
 export const photoId = () => "ph_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 
 /** Downscale + re-encode a picked file. Falls back to the original bytes if decoding fails. */
-export async function compressImage(file: Blob): Promise<{ blob: Blob; width: number; height: number }> {
+export async function compressImage(file: Blob, maxEdge = MAX_EDGE, quality = 0.86): Promise<{ blob: Blob; width: number; height: number }> {
   try {
     const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+    const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
     const w = Math.round(bitmap.width * scale);
     const h = Math.round(bitmap.height * scale);
     const canvas = document.createElement("canvas");
@@ -51,7 +51,7 @@ export async function compressImage(file: Blob): Promise<{ blob: Blob; width: nu
     if (!ctx) throw new Error("no canvas");
     ctx.drawImage(bitmap, 0, 0, w, h);
     bitmap.close?.();
-    const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/jpeg", 0.86));
+    const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/jpeg", quality));
     if (!blob) throw new Error("encode failed");
     return { blob, width: w, height: h };
   } catch {
@@ -68,6 +68,8 @@ export async function savePhoto(file: Blob): Promise<SheetPhoto> {
 
 export async function putPhoto(photo: SheetPhoto) {
   await tx("readwrite", (s) => s.put(photo));
+  // A photo that turns up after the page drew a gap for it (it came from another device).
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("counter:photo", { detail: photo.id }));
 }
 
 export function getPhoto(id: string): Promise<SheetPhoto | undefined> {
@@ -125,9 +127,15 @@ export function usePhotoUrl(id: string | undefined): string | null {
       setUrl(null);
       return;
     }
-    photoUrl(id).then((u) => alive && setUrl(u));
+    const load = () => photoUrl(id).then((u) => alive && setUrl(u));
+    load();
+    const onArrive = (e: Event) => {
+      if ((e as CustomEvent).detail === id) load();
+    };
+    window.addEventListener("counter:photo", onArrive);
     return () => {
       alive = false;
+      window.removeEventListener("counter:photo", onArrive);
     };
   }, [id]);
   return url;
@@ -141,6 +149,26 @@ function blobToDataUrl(blob: Blob): Promise<string> {
     r.onerror = () => rej(r.error);
     r.readAsDataURL(blob);
   });
+}
+
+/** A data URL small enough to sit in one cloud document (under 1 MB). Shrinks a copy if it must. */
+export async function photoForCloud(id: string, limit = 900_000): Promise<string | null> {
+  const ph = await getPhoto(id);
+  if (!ph) return null;
+  let url = await blobToDataUrl(ph.blob);
+  let edge = MAX_EDGE;
+  let quality = 0.8;
+  for (let i = 0; url.length > limit && i < 6; i++) {
+    edge = Math.round(edge * 0.8);
+    quality = Math.max(0.5, quality - 0.05);
+    const small = await compressImage(ph.blob, edge, quality);
+    url = await blobToDataUrl(small.blob);
+  }
+  return url.length <= limit ? url : null;
+}
+
+export async function hasPhoto(id: string): Promise<boolean> {
+  return (await getPhoto(id)) !== undefined;
 }
 
 export async function exportPhotos(ids: string[]): Promise<Record<string, string>> {

@@ -7,6 +7,20 @@
   [headers.values]
     Cache-Control = "no-cache"
 
+# Firebase's sign-in pages, served from this site's own address so sign-in works
+# even in browsers that block third-party storage. Must come before the catch-all.
+[[redirects]]
+  from = "/__/auth/*"
+  to = "https://counter-gym-app.firebaseapp.com/__/auth/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/__/firebase/*"
+  to = "https://counter-gym-app.firebaseapp.com/__/firebase/:splat"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

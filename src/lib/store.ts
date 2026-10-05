@@ -20,7 +20,7 @@ const defaultProfile: Profile = {
   readerPasscode: "",
 };
 
-function seed(): AppData {
+export function seed(): AppData {
   return {
     version: 1,
     profile: { ...defaultProfile },
@@ -68,9 +68,27 @@ function persist() {
   }
 }
 
+/** Sync listens here for changes made on this device. */
+let changeHandler: ((s: AppData) => void) | null = null;
+export function setChangeHandler(fn: ((s: AppData) => void) | null) {
+  changeHandler = fn;
+}
+let applyingRemote = false;
+
+/** Take in data that arrived from the cloud. Doesn't count as a change made on this device. */
+export function applyRemoteData(next: AppData) {
+  applyingRemote = true;
+  try {
+    setState(() => next);
+  } finally {
+    applyingRemote = false;
+  }
+}
+
 export function setState(updater: (s: AppData) => AppData) {
   state = updater(state);
   persist();
+  if (!applyingRemote) changeHandler?.(state);
   listeners.forEach((l) => l());
 }
 

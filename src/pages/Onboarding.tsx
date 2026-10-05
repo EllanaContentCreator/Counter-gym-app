@@ -2,11 +2,13 @@ import { useState } from "react";
 import { actions } from "@/lib/store";
 import { Button, inputCls } from "@/components/ui";
 import { IconCamera, IconChart, IconCheck, IconSheet, IconTimer } from "@/components/Icons";
+import { signInWithGoogle, useSyncStatus } from "@/lib/sync";
 
 export default function Onboarding() {
   const [name, setName] = useState("");
   const [goal, setGoal] = useState(2);
   const [step, setStep] = useState(0);
+  const sync = useSyncStatus();
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[520px] flex-col justify-between px-6 py-10">
       <div>
@@ -50,7 +52,17 @@ export default function Onboarding() {
       </div>
       <div className="mt-8">
         {step === 0 ? (
-          <Button full size="lg" variant="coral" onClick={() => setStep(1)}>Let's go</Button>
+          <div className="space-y-3">
+            <Button full size="lg" variant="coral" onClick={() => setStep(1)}>Let's go</Button>
+            {sync.configured && (
+              <>
+                <Button full variant="secondary" onClick={() => void signInWithGoogle()} disabled={sync.phase === "starting"}>
+                  {sync.phase === "starting" ? "Signing in…" : "Already use Counter? Sign in with Google"}
+                </Button>
+                {sync.message && <p className="text-center text-sm font-bold text-rose-700">{sync.message}</p>}
+              </>
+            )}
+          </div>
         ) : (
           <Button full size="lg" variant="coral" onClick={() => actions.updateProfile({ name: name.trim(), weeklyGoal: goal, onboarded: true })}>Start counting</Button>
         )}

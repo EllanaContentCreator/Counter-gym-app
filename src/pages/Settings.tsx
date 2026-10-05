@@ -5,6 +5,7 @@ import { Button, Card, Field, Sheet, inputCls, cnHelper } from "@/components/ui"
 import { IconImage, IconSpark } from "@/components/Icons";
 import { hostCanRunReader, readerEndpoint, readerIsPreconfigured } from "@/lib/scan";
 import { DAY_TYPE_LABEL } from "@/data/nutrition";
+import { downloadPreSyncCopy, signInWithGoogle, signOutOfSync, syncNow, useSyncStatus } from "@/lib/sync";
 import type { DayType } from "@/lib/types";
 
 export default function Settings() {
@@ -13,6 +14,9 @@ export default function Settings() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState("");
   const [confirmReset, setConfirmReset] = useState(false);
+  const sync = useSyncStatus();
+  const syncedIn = sync.configured && sync.email !== null;
+  const [copyMsg, setCopyMsg] = useState("");
   const isStandalone = typeof window !== "undefined" && (window.matchMedia("(display-mode: standalone)").matches || (navigator as { standalone?: boolean }).standalone);
 
   const n = data.nutrition;
@@ -226,9 +230,50 @@ export default function Settings() {
           )}
         </Card>
 
+        {sync.configured && (
+          <Card className="space-y-3">
+            <div className="display text-[22px]">Sync between devices</div>
+            {!syncedIn ? (
+              <>
+                <p className="text-sm text-ink-soft">Sign in with Google on each device and your workouts, sheets, food, water and weight will be the same on all of them. It works offline and catches up when you're back online.</p>
+                <Button full onClick={() => void signInWithGoogle()} disabled={sync.phase === "starting"}>
+                  {sync.phase === "starting" ? "Signing in…" : "Sign in with Google"}
+                </Button>
+                <p className="text-xs text-ink-mute">Nothing on this device is erased by signing in. A copy of it is saved first.</p>
+              </>
+            ) : (
+              <>
+                <div className="rounded-xl bg-sand px-3 py-2">
+                  <div className="text-[11px] font-extrabold uppercase tracking-widest text-ink-mute">Signed in as</div>
+                  <div className="text-[14px] font-bold text-ink break-all">{sync.email}</div>
+                </div>
+                <p className={cnHelper("text-sm font-bold", sync.phase === "error" ? "text-rose-700" : "text-teal-700")}>
+                  {sync.phase === "starting" && "Getting your data…"}
+                  {sync.phase === "syncing" && "Saving…"}
+                  {sync.phase === "synced" && `Up to date${sync.lastSynced ? ` · ${new Date(sync.lastSynced).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}` : ""}`}
+                  {sync.phase === "offline" && "Offline — changes are kept and will go up when you're back online."}
+                  {sync.phase === "error" && (sync.message || "Couldn't sync. Your data is safe on this device.")}
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="secondary" onClick={() => void syncNow()}>Sync now</Button>
+                  <Button variant="secondary" onClick={() => void signOutOfSync()}>Sign out</Button>
+                </div>
+                <button type="button" className="tap text-[13px] font-extrabold text-teal-700" onClick={async () => setCopyMsg((await downloadPreSyncCopy()) ? "Saved to your downloads." : "No earlier copy was kept on this device.")}>
+                  Download the copy saved before syncing
+                </button>
+                {copyMsg && <p className="text-xs font-semibold text-ink-soft">{copyMsg}</p>}
+              </>
+            )}
+          </Card>
+        )}
+
         <Card className="space-y-3">
           <div className="display text-[22px]">Backup</div>
-          <p className="text-sm text-ink-soft">Everything lives on this phone. Export a backup now and then, or to move your history to a new phone.</p>
+          <p className="text-sm text-ink-soft">
+            {syncedIn
+              ? "You're signed in, so your data is kept in the cloud and matches on all your devices. A backup file is a spare copy. Restoring one replaces everything, on every device you're signed in on."
+              : "Everything lives on this device only, so a laptop or another phone starts empty. Export a backup now and then, or to move your history to another device. Restoring replaces whatever is already on the device you restore onto."}
+          </p>
           <div className="flex items-center gap-2 rounded-xl bg-sand px-3 py-2 text-xs font-semibold text-ink-soft"><IconImage size={16} /> {photoCount} sheet photo{photoCount === 1 ? "" : "s"} will be included in the backup.</div>
           <div className="grid grid-cols-2 gap-2">
             <Button onClick={exportBackup} disabled={busy}>{busy ? "Working…" : "Export backup"}</Button>
@@ -249,7 +294,7 @@ export default function Settings() {
         <Card className="space-y-2">
           <div className="display text-[22px]">About Counter</div>
           <p className="text-sm text-ink-soft">Counter is built on the training sheets of <b>Carolyn Counter</b>: four stations, three rounds, a tabata to finish, and every weight written down. She's retired; the accountability isn't. Count it. Own it.</p>
-          <p className="text-xs text-ink-mute">Your data never leaves your device.</p>
+          <p className="text-xs text-ink-mute">{syncedIn ? "Your data is saved privately to your own Google sign-in, so only you can see it." : "Your data stays on this device unless you turn on sync."}</p>
           <div className="rounded-xl bg-sand px-3 py-2">
             <div className="text-[11px] font-extrabold uppercase tracking-widest text-ink-mute">This build</div>
             <div className="font-mono text-[13px] font-bold text-ink">{__BUILD_ID__}</div>
@@ -265,6 +310,7 @@ export default function Settings() {
       </div>
       <Sheet open={confirmReset} onClose={() => setConfirmReset(false)} title="Reset everything?">
         <p className="text-sm text-ink-soft">This deletes your history, custom exercises, sheet photos and edits to programs. Carolyn's original sheets stay. Export a backup first if you're not sure.</p>
+        {syncedIn && <p className="mt-2 text-sm font-bold text-rose-700">You're signed in to sync, so this also clears it from your other devices and the cloud.</p>}
         <div className="mt-4 grid grid-cols-2 gap-2">
           <Button variant="secondary" onClick={() => setConfirmReset(false)}>Cancel</Button>
           <Button variant="danger" onClick={() => { actions.resetAll(); setConfirmReset(false); }}>Reset</Button>

@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import { loadActiveSession } from "./lib/store";
+import { initSync } from "./lib/sync";
 
 /**
  * Keep an installed app up to date.
@@ -38,6 +39,8 @@ if (!import.meta.env.VITE_SINGLE_FILE) {
     }),
   );
 }
+
+initSync();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

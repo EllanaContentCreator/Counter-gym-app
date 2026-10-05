@@ -41,10 +41,21 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,png,svg,webp,jpg,woff2}"],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+        // Sign-in pages come from Firebase, not from this app's files.
+        navigateFallbackDenylist: [/^\/__\//],
       },
     }),
   ],
   define: { __BUILD_ID__: JSON.stringify(buildId) },
   resolve: { alias: { "@": path.resolve(import.meta.dirname, "src") } },
-  server: { port: 5173, host: true },
+  server: {
+    port: 5173,
+    host: true,
+    // Firebase's sign-in pages are served from this app's own address (see firebaseConfig.ts),
+    // so browsers that block third-party storage still finish signing in.
+    proxy: {
+      "/__/auth": { target: "https://counter-gym-app.firebaseapp.com", changeOrigin: true },
+      "/__/firebase": { target: "https://counter-gym-app.firebaseapp.com", changeOrigin: true },
+    },
+  },
 });
