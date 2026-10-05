@@ -14,6 +14,7 @@ import Progress from "@/pages/Progress";
 import SessionDetail from "@/pages/SessionDetail";
 import LogPast from "@/pages/LogPast";
 import Food from "@/pages/Food";
+import MealPlan from "@/pages/MealPlan";
 import Timer from "@/pages/Timer";
 import Settings from "@/pages/Settings";
 import Onboarding from "@/pages/Onboarding";
@@ -87,6 +88,7 @@ export default function App() {
         <Route path="/library" component={Library} />
         <Route path="/library/:id" component={ExerciseDetail} />
         <Route path="/workout" component={Workout} />
+        <Route path="/plan" component={MealPlan} />
         <Route path="/food/:date?" component={Food} />
         {/* Routing runs off the hash, which swallows a query string whole, so
             anything that needs an argument takes it as a path segment.

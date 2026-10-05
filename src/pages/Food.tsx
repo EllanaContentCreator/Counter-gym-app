@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "wouter";
 import { useAppData, actions, uid } from "@/lib/store";
 import type { FoodEntry, FoodFavourite, MealSlot, PlanMeal } from "@/lib/types";
 import { DAY_TYPE_LABEL, SLOT_LABEL, SLOT_ORDER } from "@/data/nutrition";
@@ -195,7 +196,10 @@ export default function Food({ params }: { params?: { date?: string } }) {
         {/* One tap for the meals she eats on this day of the week. */}
         {plan && plan.meals.length > 0 && (
           <div>
-            <h3 className="display mb-2 text-[20px]">{offset === 0 ? "Today's plan" : "The plan for this day"}</h3>
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="display text-[20px]">{offset === 0 ? "Today's plan" : "The plan for this day"}</h3>
+              <Link href="/plan" className="tap rounded-full bg-sand px-3 py-1.5 text-[12px] font-extrabold text-teal-700">Edit plan</Link>
+            </div>
             <div className="space-y-2">
               {plan.meals.map((m) => {
                 const done = loggedPlanIds.has(m.id);
@@ -300,6 +304,7 @@ export default function Food({ params }: { params?: { date?: string } }) {
           <Button size="lg" onClick={() => openAdd("lunch")}><IconPlus size={16} /> Add food</Button>
           <Button size="lg" variant="secondary" onClick={() => openAdd("snack")}><IconStar size={16} /> Add a snack</Button>
         </div>
+        <Link href="/plan" className="tap block pb-2 text-center text-[13px] font-extrabold text-teal-700">Edit your weekly meal plan</Link>
       </div>
 
       {/* Anything that can be undone says so, right where the thumb already is. */}
