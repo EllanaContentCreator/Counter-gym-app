@@ -7,6 +7,7 @@ import { Header, TimerButton } from "@/components/Header";
 import { Button, Card, Empty, SectionTitle, Stat } from "@/components/ui";
 import { WeightSheet } from "@/components/WeightSheet";
 import { Summary } from "@/components/Summary";
+import { CalendarView } from "@/components/CalendarView";
 
 const FACE = { 1: "😮‍💨", 2: "😐", 3: "🙂", 4: "😄", 5: "🔥" } as const;
 
@@ -15,7 +16,7 @@ export default function Progress() {
   const done = useMemo(() => [...data.sessions].filter((s) => s.finishedAt).sort((a, b) => b.startedAt - a.startedAt), [data.sessions]);
   // Today links straight to /progress/weight, so open on that tab.
   const [loc] = useLocation();
-  const [tab, setTab] = useState<"summary" | "history" | "weight" | "pbs">(loc.endsWith("/weight") ? "weight" : "summary");
+  const [tab, setTab] = useState<"summary" | "calendar" | "history" | "weight" | "pbs">(loc.endsWith("/weight") ? "weight" : "summary");
   const [weighing, setWeighing] = useState(false);
   const [weighDate, setWeighDate] = useState<string | undefined>(undefined);
   const unit = data.profile.unit;
@@ -88,14 +89,16 @@ export default function Progress() {
         </Card>
 
         <div className="scroll-x -mx-4 flex gap-2 px-4">
-          {(["summary", "history", "weight", "pbs"] as const).map((t) => (
+          {(["summary", "calendar", "history", "weight", "pbs"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)} className={cn("tap shrink-0 rounded-full px-4 py-2 text-sm font-bold", tab === t ? "grad-teal text-white shadow-[var(--shadow-pop)]" : "bg-white text-ink-soft shadow-card")}>
-              {t === "summary" ? "Summary" : t === "history" ? "History" : t === "weight" ? "Weight" : "Personal bests"}
+              {t === "summary" ? "Summary" : t === "calendar" ? "Calendar" : t === "history" ? "History" : t === "weight" ? "Weight" : "Personal bests"}
             </button>
           ))}
         </div>
 
         {tab === "summary" && <Summary />}
+
+        {tab === "calendar" && <CalendarView />}
 
         {tab === "weight" && (
           <div className="space-y-3">

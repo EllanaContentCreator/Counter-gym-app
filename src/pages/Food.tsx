@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAppData, actions, uid } from "@/lib/store";
 import type { FoodEntry, FoodFavourite, MealSlot, PlanMeal } from "@/lib/types";
 import { DAY_TYPE_LABEL, SLOT_LABEL, SLOT_ORDER } from "@/data/nutrition";
@@ -16,6 +16,7 @@ import { Header, TimerButton } from "@/components/Header";
 import { Button, Card, Empty, Pill } from "@/components/ui";
 import { FoodSheet, draftFrom, emptyDraft, entryFromDraft, type FoodDraft } from "@/components/FoodSheet";
 import { WaterCard } from "@/components/Water";
+import { dayOffset } from "@/lib/calendar";
 import { IconBack, IconCheck, IconNext, IconPlus, IconStar, IconTrash } from "@/components/Icons";
 
 /**
@@ -52,10 +53,14 @@ function TargetBar({ label, value, band, unit, tone }: { label: string; value: n
   );
 }
 
-export default function Food() {
+export default function Food({ params }: { params?: { date?: string } }) {
   const data = useAppData();
   // Which day is on screen. Logging yesterday's dinner this morning is normal.
-  const [offset, setOffset] = useState(0);
+  // The calendar opens this on a given day (/food/2026-10-04); otherwise it opens on today.
+  const [offset, setOffset] = useState(() => (params?.date ? dayOffset(params.date) : 0));
+  useEffect(() => {
+    setOffset(params?.date ? dayOffset(params.date) : 0);
+  }, [params?.date]);
   const ts = Date.now() + offset * 864e5;
   const key = dayKey(ts);
   const day = data.days[key] ?? { date: key, food: [] };
