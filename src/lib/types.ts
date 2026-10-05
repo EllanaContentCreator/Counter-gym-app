@@ -203,6 +203,11 @@ export interface Profile {
   readerUrl?: string;
   /** Shared passcode for the group's sheet reader. */
   readerPasscode?: string;
+  /**
+   * A sheet she picked as "Up next". It holds until she finishes that workout, then it goes
+   * back to automatic. `null` rather than missing when cleared, so the clearing syncs.
+   */
+  upNext?: { id: string; at: number } | null;
 }
 
 export interface AppData {

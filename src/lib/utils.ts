@@ -223,6 +223,19 @@ export function nextProgram(programs: Program[], sessions: WorkoutSession[]): Pr
   return ordered[(idx + 1) % ordered.length] ?? ordered[0];
 }
 
+/**
+ * What's on the "Up next" card: the sheet she picked, if she picked one and hasn't done it
+ * since; otherwise the sheet after the one she did last.
+ */
+export function upNextProgram(programs: Program[], sessions: WorkoutSession[], pick?: { id: string; at: number } | null): Program | null {
+  if (pick) {
+    const chosen = programs.find((p) => p.id === pick.id);
+    const doneSince = sessions.some((s) => s.finishedAt && s.programId === pick.id && s.startedAt >= pick.at);
+    if (chosen && !doneSince) return chosen;
+  }
+  return nextProgram(programs, sessions);
+}
+
 export function greeting(name: string) {
   const h = new Date().getHours();
   const part = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";

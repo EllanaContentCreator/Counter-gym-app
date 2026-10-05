@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAppData, actions } from "@/lib/store";
-import { greeting, quoteOfTheDay, nextProgram, sessionsThisWeek, weekStreak, programSummary, formatDate, formatDuration, findExercise, rowName, programsThisWeek, programDate, dayRecord, dayTypeFor, foodTotals, planForDay, targetFor, cn, dayKey, weightProgress } from "@/lib/utils";
+import { greeting, quoteOfTheDay, upNextProgram, programsByWeek, weekLabel, sessionsThisWeek, weekStreak, programSummary, formatDate, formatDuration, findExercise, rowName, programsThisWeek, programDate, dayRecord, dayTypeFor, foodTotals, planForDay, targetFor, cn, dayKey, weightProgress } from "@/lib/utils";
 import { Header, TimerButton } from "@/components/Header";
-import { Button, Card, GoalRing, Pill, SectionTitle, Stat } from "@/components/ui";
+import { Button, Card, GoalRing, Pill, SectionTitle, Sheet, Stat } from "@/components/ui";
 import { ExerciseImage } from "@/components/ExerciseImage";
 import { PhotoThumb } from "@/components/SheetPhotos";
 import { AddSheetFlow } from "@/components/AddSheet";
@@ -15,7 +15,11 @@ export default function Today() {
   const data = useAppData();
   const [, nav] = useLocation();
   const [adding, setAdding] = useState(false);
-  const next = nextProgram(data.programs, data.sessions);
+  const next = upNextProgram(data.programs, data.sessions, data.profile.upNext);
+  const picked = !!data.profile.upNext && next?.id === data.profile.upNext.id;
+  const [choosing, setChoosing] = useState(false);
+  const weeks = programsByWeek(data.programs);
+  const doneIds = new Set(data.sessions.filter((x) => x.finishedAt).map((x) => x.programId));
   const week = sessionsThisWeek(data.sessions);
   const streak = weekStreak(data.sessions);
   const recent = [...data.sessions].filter((s) => s.finishedAt).sort((a, b) => b.startedAt - a.startedAt).slice(0, 3);
@@ -68,6 +72,38 @@ export default function Today() {
           </div>
         </section>
 
+        {next && (
+          <Card className="relative overflow-hidden border-2 border-teal-100 p-5">
+            <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-teal-50" />
+            <div className="absolute -right-4 top-12 h-16 w-16 rounded-full bg-coral-100/70" />
+            <div className="relative">
+              <div className="flex items-center justify-between">
+                <Pill tone="teal">{picked ? "Up next · your pick" : "Up next"}</Pill>
+                <button onClick={() => setChoosing(true)} className="tap rounded-full bg-sand px-3 py-1.5 text-[12px] font-extrabold text-teal-700">Change</button>
+              </div>
+              <h3 className="display mt-2 text-[30px] leading-none">{next.name}</h3>
+              <p className="mt-1 text-sm text-ink-soft">
+                {next.dayLabel} · {programSummary(next).stations} stations · {programSummary(next).tabatas} tabata
+              </p>
+              <div className="scroll-x mt-3 -mx-1 flex gap-2 px-1">
+                {next.rows.slice(0, 6).map((r) => (
+                  <div key={r.id} className="flex w-[84px] shrink-0 flex-col items-center">
+                    <ExerciseImage exercise={findExercise(r.exerciseId, data.customExercises)} size="md" className="shadow-card" />
+                    <span className="mt-1 line-clamp-2 text-center text-[10px] font-semibold leading-tight text-ink-soft">{rowName(r, data.customExercises)}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <Button variant="coral" onClick={() => begin("guided45")}><IconTimer size={18} /> 45-min guided</Button>
+                <Button onClick={() => begin("free")}><IconPlay size={16} /> Start & log</Button>
+              </div>
+              <Link href={`/programs/${next.id}`} className="mt-3 flex items-center justify-center gap-1 text-sm font-bold text-teal-700">
+                View or edit the sheet <IconNext size={14} />
+              </Link>
+            </div>
+          </Card>
+        )}
+
         {/* This week's sheets */}
         <Card className="p-4">
           <div className="flex items-center justify-between">
@@ -102,35 +138,6 @@ export default function Today() {
             <IconCamera size={18} /> {sheetsThisWeek.length < sheetsGoal ? "Add this week's sheet" : "Add another sheet"}
           </Button>
         </Card>
-
-        {next && (
-          <Card className="relative overflow-hidden border-2 border-teal-100 p-5">
-            <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-teal-50" />
-            <div className="absolute -right-4 top-12 h-16 w-16 rounded-full bg-coral-100/70" />
-            <div className="relative">
-              <Pill tone="teal">Up next</Pill>
-              <h3 className="display mt-2 text-[30px] leading-none">{next.name}</h3>
-              <p className="mt-1 text-sm text-ink-soft">
-                {next.dayLabel} · {programSummary(next).stations} stations · {programSummary(next).tabatas} tabata
-              </p>
-              <div className="scroll-x mt-3 -mx-1 flex gap-2 px-1">
-                {next.rows.slice(0, 6).map((r) => (
-                  <div key={r.id} className="flex w-[84px] shrink-0 flex-col items-center">
-                    <ExerciseImage exercise={findExercise(r.exerciseId, data.customExercises)} size="md" className="shadow-card" />
-                    <span className="mt-1 line-clamp-2 text-center text-[10px] font-semibold leading-tight text-ink-soft">{rowName(r, data.customExercises)}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                <Button variant="coral" onClick={() => begin("guided45")}><IconTimer size={18} /> 45-min guided</Button>
-                <Button onClick={() => begin("free")}><IconPlay size={16} /> Start & log</Button>
-              </div>
-              <Link href={`/programs/${next.id}`} className="mt-3 flex items-center justify-center gap-1 text-sm font-bold text-teal-700">
-                View or edit the sheet <IconNext size={14} />
-              </Link>
-            </div>
-          </Card>
-        )}
 
         <div className="grid grid-cols-3 gap-2">
           <Stat value={`${week.length}/${goal}`} label="This week" tone={week.length >= goal ? "teal" : "ink"} icon={<IconCheck size={16} />} />
@@ -278,6 +285,37 @@ export default function Today() {
 
         <p className="pb-2 text-center text-[11px] text-ink-mute">Built on Carolyn Counter's programs. Stay accountable. 💪</p>
       </div>
+      <Sheet open={choosing} onClose={() => setChoosing(false)} title="Pick your up next">
+        <p className="text-sm text-ink-soft">
+          {picked ? "You've picked this one. It stays up top until you finish it." : "It's on automatic: the sheet after the last one you did."} Pick any sheet to do it next.
+        </p>
+        {picked && (
+          <Button full variant="secondary" className="mt-3" onClick={() => { actions.setUpNext(null); setChoosing(false); }}>
+            Go back to automatic
+          </Button>
+        )}
+        <div className="mt-4 space-y-4">
+          {weeks.map((w) => (
+            <section key={w.start} className="space-y-2">
+              <h4 className="text-[11px] font-extrabold uppercase tracking-widest text-ink-mute">{weekLabel(w.start)}</h4>
+              {w.programs.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => { actions.setUpNext(p.id); setChoosing(false); }}
+                  className={cn("card tap flex w-full items-center gap-3 p-3 text-left", next?.id === p.id && "border-2 border-teal-700")}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-bold">{p.name}</div>
+                    <div className="truncate text-[11px] text-ink-mute">{p.dayLabel || formatDate(programDate(p))}</div>
+                  </div>
+                  {doneIds.has(p.id) && <span className="text-[11px] font-bold text-teal-700">✓ done before</span>}
+                  {next?.id === p.id && <span className="text-[11px] font-extrabold text-teal-700">Up next</span>}
+                </button>
+              ))}
+            </section>
+          ))}
+        </div>
+      </Sheet>
       <AddSheetFlow open={adding} onClose={() => setAdding(false)} />
     </div>
   );

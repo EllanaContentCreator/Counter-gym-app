@@ -113,6 +113,10 @@ export const actions = {
   updateProfile(patch: Partial<Profile>) {
     setState((s) => ({ ...s, profile: { ...s.profile, ...patch } }));
   },
+  /** Pick which sheet is "Up next" (or null to go back to automatic). */
+  setUpNext(id: string | null) {
+    setState((s) => ({ ...s, profile: { ...s.profile, upNext: id ? { id, at: Date.now() } : null } }));
+  },
   upsertProgram(program: Program) {
     setState((s) => {
       const idx = s.programs.findIndex((p) => p.id === program.id);
