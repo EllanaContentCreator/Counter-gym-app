@@ -204,6 +204,23 @@ export const actions = {
       return { ...s, days: { ...s.days, [date]: { ...day, food: [...day.food, entry] } } };
     });
   },
+  /** Add several foods to a day in one go (copying a meal or a day). */
+  addFoodMany(date: string, entries: FoodEntry[]) {
+    if (!entries.length) return;
+    setState((s) => {
+      const day: DayRecord = s.days[date] ?? { date, food: [] };
+      return { ...s, days: { ...s.days, [date]: { ...day, food: [...day.food, ...entries] } } };
+    });
+  },
+  /** Take several foods off a day (undoing a copy). */
+  removeFoodMany(date: string, ids: string[]) {
+    const gone = new Set(ids);
+    setState((s) => {
+      const day = s.days[date];
+      if (!day) return s;
+      return { ...s, days: { ...s.days, [date]: { ...day, food: day.food.filter((f) => !gone.has(f.id)) } } };
+    });
+  },
   updateFood(date: string, entry: FoodEntry) {
     setState((s) => {
       const day = s.days[date];

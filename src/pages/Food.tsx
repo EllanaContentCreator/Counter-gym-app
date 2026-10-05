@@ -17,6 +17,8 @@ import { Button, Card, Empty, Pill } from "@/components/ui";
 import { FoodSheet, draftFrom, emptyDraft, entryFromDraft, type FoodDraft } from "@/components/FoodSheet";
 import { WaterCard } from "@/components/Water";
 import { dayOffset } from "@/lib/calendar";
+import { copiesOf } from "@/lib/foodcopy";
+import { CopyFoodSheet } from "@/components/CopyFoodSheet";
 import { IconBack, IconCheck, IconNext, IconPlus, IconStar, IconTrash } from "@/components/Icons";
 
 /**
@@ -72,6 +74,7 @@ export default function Food({ params }: { params?: { date?: string } }) {
   const [draft, setDraft] = useState<FoodDraft | null>(null);
   const [editing, setEditing] = useState<FoodEntry | null>(null);
   const [undo, setUndo] = useState<{ label: string; run: () => void } | null>(null);
+  const [copying, setCopying] = useState(false);
 
   const showUndo = (label: string, run: () => void) => {
     setUndo({ label, run });
@@ -95,6 +98,12 @@ export default function Food({ params }: { params?: { date?: string } }) {
     const copy: FoodEntry = { ...entry, id: uid(), loggedAt: Date.now(), planMealId: undefined };
     actions.addFood(key, copy);
     showUndo(`${entry.name} added again`, () => actions.deleteFood(key, copy.id));
+  };
+
+  const copyIn = (entries: FoodEntry[], what: string) => {
+    const copies = copiesOf(entries, uid);
+    actions.addFoodMany(key, copies);
+    showUndo(`Copied ${what}`, () => actions.removeFoodMany(key, copies.map((c) => c.id)));
   };
 
   const remove = (entry: FoodEntry) => {
@@ -285,6 +294,8 @@ export default function Food({ params }: { params?: { date?: string } }) {
           )}
         </div>
 
+        <Button full variant="secondary" onClick={() => setCopying(true)}>Copy from another day</Button>
+
         <div className="grid grid-cols-2 gap-2 pb-2">
           <Button size="lg" onClick={() => openAdd("lunch")}><IconPlus size={16} /> Add food</Button>
           <Button size="lg" variant="secondary" onClick={() => openAdd("snack")}><IconStar size={16} /> Add a snack</Button>
@@ -300,6 +311,15 @@ export default function Food({ params }: { params?: { date?: string } }) {
           </div>
         </div>
       )}
+
+      <CopyFoodSheet
+        open={copying}
+        onClose={() => setCopying(false)}
+        days={data.days}
+        exceptKey={key}
+        targetLabel={offset === 0 ? "today" : formatDate(ts, { weekday: "long", day: "numeric", month: "short" })}
+        onCopy={copyIn}
+      />
 
       <FoodSheet
         open={!!draft}
