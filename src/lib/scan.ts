@@ -26,8 +26,8 @@ export interface ScannedSheet {
  * group never has to set one up. Nobody but the person who deploys Counter
  * should ever see a settings screen for this.
  */
-const BUILT_IN_READER = (import.meta.env.VITE_READER_URL ?? "").trim();
-const BUILT_IN_PASSCODE = (import.meta.env.VITE_READER_PASSCODE ?? "").trim();
+const BUILT_IN_READER = (import.meta.env?.VITE_READER_URL ?? "").trim();
+const BUILT_IN_PASSCODE = (import.meta.env?.VITE_READER_PASSCODE ?? "").trim();
 
 /**
  * Where the reader lives, most specific first:
@@ -146,7 +146,9 @@ function tokens(s: string) {
     .replace(/[^a-z0-9\s]+/g, " ")
     .split(/\s+/)
     .filter((t) => t && !STOP.has(t))
-    .map((t) => (t.endsWith("s") && t.length > 3 ? t.slice(0, -1) : t));
+    // Plurals only: "Ups" is "up", but "Press" must not become "pres" or it
+    // stops reading as a movement at all.
+    .map((t) => (t.endsWith("s") && !t.endsWith("ss") && t.length > 2 ? t.slice(0, -1) : t));
 }
 
 /** Words that strongly imply a piece of equipment, used to pick equipment for a new exercise. */
@@ -253,7 +255,7 @@ const ALIAS: Array<[RegExp, string]> = [
  * A scored match this strong is trusted ahead of the alias list — in practice
  * only a name the library spells out almost exactly.
  */
-const ALIAS_FLOOR = 0.99;
+const ALIAS_FLOOR = 0.9;
 
 /** Equipment words present in a read name, used to prefer a same-kit match. */
 function equipmentIn(name: string): Set<string> {
@@ -263,18 +265,36 @@ function equipmentIn(name: string): Set<string> {
   return found;
 }
 
+/**
+ * Words that only name the kit. Two names that share nothing but these are
+ * different moves done with the same thing ("Hold Plate" is not a Plate Halo).
+ * Cardio machines are left out because their name is the whole exercise.
+ */
+const KIT = new Set([
+  "dumbbell", "db", "kettlebell", "kb", "barbell", "bar", "hex", "plate", "cable", "trx", "bosu",
+  "medicine", "med", "ball", "box", "bench", "slider", "band", "banded", "smith", "swiss", "roller", "mat", "machine",
+]);
+
 /** Score 0-1 for how well one candidate form matches a library exercise. */
 function scoreOne(readName: string, ex: Exercise) {
-  const a = tokens(readName);
-  const b = tokens(ex.name);
+  // Each word once: "Left Leg Up, Right Leg Up, Left Leg Down" says "leg" four
+  // times, and counting every one scored it a perfect match for Leg Extension.
+  const a = [...new Set(tokens(readName))];
+  const b = [...new Set(tokens(ex.name))];
   if (!a.length || !b.length) return 0;
   const setB = new Set(b);
-  const hits = a.filter((t) => setB.has(t)).length;
+  const shared = a.filter((t) => setB.has(t));
+  const hits = shared.length;
   const na = readName.toLowerCase().replace(/[^a-z0-9]/g, "");
   const nb = ex.name.toLowerCase().replace(/[^a-z0-9]/g, "");
   if (na === nb) return 1;
+  if (!shared.some((t) => !KIT.has(t))) return 0;
   let s = ((hits / a.length) * 2 + hits / b.length) / 3;
-  if (nb.includes(na) || na.includes(nb)) s = Math.max(s, 0.85);
+  // One name sitting inside the other is a strong sign, but not when the
+  // shorter one is a single word: "Kneel" is inside "Kneeling Plate
+  // Woodchoppers" and "Crunch" inside "Cable Kneeling Crunch".
+  const shorter = na.length <= nb.length ? a : b;
+  if (shorter.length >= 2 && (nb.includes(na) || na.includes(nb))) s = Math.max(s, 0.85);
   // Two moves that share their verb are far likelier to be the same move.
   const moveA = MOVEMENT.filter((m) => a.includes(m));
   const moveB = MOVEMENT.filter((m) => b.includes(m));
@@ -342,13 +362,13 @@ function newExerciseName(raw: string) {
  * not, and used to fall back to an anatomy diagram — the one tile in the app
  * without the woman in it. The library already shares one drawing across
  * near-identical moves (a goblet squat and a kettlebell goblet squat), so a
- * scanned move borrows on the same terms: the nearest thing by name, or failing
- * that the nearest thing using the same kit on the same muscles.
+ * scanned move borrows on the same terms: the nearest thing by name, when it is
+ * the same movement.
  *
  * It is a stand-in, not a claim — it is only ever reached when nothing in the
  * library was close enough to match against, and the row keeps Carolyn's own
- * wording. Where nothing is close on either count, the diagram still wins over
- * a picture of the wrong movement.
+ * wording. Where no drawing shows the same movement, the diagram wins over a
+ * picture of the wrong one.
  */
 /**
  * Whether two names describe the same kind of movement.
@@ -364,45 +384,23 @@ function sharesMovement(a: string, b: string) {
   return MOVEMENT.some((m) => ta.includes(m) && tb.includes(m));
 }
 
-function borrowImage(
-  library: Exercise[],
-  name: string,
-  equipment: string[],
-  muscles: string[],
-  best: Exercise | undefined,
-  bestScore: number,
-  /** false when the name named no kit and no body part, so any pick would be arbitrary */
-  hasSignal: boolean,
-): string | undefined {
+function borrowImage(name: string, best: Exercise | undefined, bestScore: number): string | undefined {
   // Close enough on the words alone, and doing the same thing with them.
   if (best?.image && bestScore >= 0.3 && sharesMovement(name, best.name)) return best.image;
-  // Nothing in the name to go on. A drawing chosen at random is worse than an
-  // honest diagram, so this is where the borrowing stops.
-  if (!hasSignal) return undefined;
-  let pick: Exercise | undefined;
-  let score = 0;
-  for (const ex of library) {
-    if (!ex.image) continue;
-    // Same kit counts for more than the same muscle: a kettlebell move drawn
-    // with a kettlebell reads right even when the movement differs.
-    const s = ex.equipment.filter((e) => equipment.includes(e)).length * 2 + ex.muscles.filter((m) => muscles.includes(m)).length;
-    if (s > score) {
-      score = s;
-      pick = ex;
-    }
-  }
-  return score > 0 ? pick?.image : undefined;
+  // Anything else would be a drawing of a different movement. Picking one by
+  // kit and muscles put an overhead press on "Barbell Floor To Shoulder", and
+  // a wrong picture is worse than the honest diagram.
+  return undefined;
 }
 
-function makeExercise(name: string, isTabata: boolean, library: Exercise[] = [], best?: Exercise, bestScore = 0): Exercise {
+function makeExercise(name: string, isTabata: boolean, best?: Exercise, bestScore = 0): Exercise {
   const equipFound = hintsIn(name, EQUIP_HINTS);
   const muscleFound = hintsIn(name, MUSCLE_HINTS);
   const equipment = (equipFound.length ? equipFound : ["bodyweight"]) as Exercise["equipment"];
   const muscles = (muscleFound.length ? muscleFound : ["full-body"]) as Exercise["muscles"];
   const known = new Set(EQUIPMENT.map((e) => e.id as string));
-  const kit = (equipment as string[]).filter((e) => known.has(e));
   return {
-    image: borrowImage(library, name, kit.length ? kit : ["bodyweight"], muscles as string[], best, bestScore, equipFound.length > 0 || muscleFound.length > 0),
+    image: borrowImage(name, best, bestScore),
     id: `custom-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48)}-${uid().slice(0, 4)}`,
     name: name.trim(),
     equipment: (equipment.filter((e) => known.has(e)) as Exercise["equipment"]).length
@@ -453,7 +451,7 @@ export function matchRows(scanned: ScannedRow[], custom: Exercise[]): MatchedRow
     }
 
     const good = !!best && bestScore >= MATCH_THRESHOLD;
-    const exercise = good ? best! : makeExercise(newExerciseName(name), slot === "TABATA", library, best, bestScore);
+    const exercise = good ? best! : makeExercise(newExerciseName(name), slot === "TABATA", best, bestScore);
     if (!good) created.push(exercise);
     const row: ProgramRow = {
       id: uid(),

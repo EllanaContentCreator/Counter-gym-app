@@ -26,7 +26,7 @@ export const EXERCISES: Exercise[] = [
   { id: "kettlebell-farmers-walk", name: "Kettlebell Farmers Walk", equipment: ["kettlebell"], muscles: ["full-body", "core", "shoulders"], category: "strength", image: "kettlebell-farmers-walk",
     cues: ["Bell in each hand, shoulders back and down", "Walk tall with short quick steps", "Don't let the weight tip you sideways"] },
   { id: "plate-get-up", name: "Plate Get Up", equipment: ["plate", "mat"], muscles: ["full-body", "core", "legs"], category: "strength", image: "plate-get-up",
-    cues: ["Lie flat holding the plate at chest", "Sit up, kneel, stand — plate stays close", "Reverse it slowly back to the floor"] },
+    cues: ["Lie on your back, knees up, plate held to your chest", "Roll up into a low squat and stand — plate stays close", "Reverse it slowly back to the floor (a Bosu behind you helps)"] },
   { id: "kneeling-single-arm-lat-pulldown", name: "Kneeling Single Arm Lat Pulldown - L & R", equipment: ["cable"], muscles: ["lats", "back", "biceps"], category: "strength", unilateral: true, image: "kneeling-single-arm-lat-pulldown",
     cues: ["Half kneel under the high cable", "Pull elbow down to the hip", "Feel it under the armpit, not the arm"] },
   { id: "dumbbell-slider-side-lunge", name: "Dumbbell Slider Side Lunge - L & R", equipment: ["dumbbell", "slider"], muscles: ["glutes", "quads", "hamstrings"], category: "strength", unilateral: true, image: "dumbbell-slider-side-lunge",
@@ -73,6 +73,17 @@ export const EXERCISES: Exercise[] = [
     cues: ["Hands slightly wider than the shoulders", "Lower chest to the floor, elbows at 45°", "Full push ups when fresh, knees when tired"] },
   { id: "v-snap-toe-taps", name: "V Snap / Toe Taps Legs Up", equipment: ["mat", "plate"], muscles: ["core"], category: "tabata", image: "v-snap",
     cues: ["Lie flat, legs straight up", "Snap up to touch the toes", "Lower shoulders slowly, lower back stays down"] },
+  // Off the 12 Oct sheet. Not drawn yet, so they show their muscle map until a picture is chosen.
+  { id: "dumbbell-chest-fly", name: "Dumbbell Chest Fly", equipment: ["dumbbell", "bench"], muscles: ["chest", "shoulders"], category: "strength",
+    cues: ["Lie on the bench, dumbbells above the chest, palms facing", "Soft elbows, open the arms out wide in an arc", "Squeeze the chest to bring them back together"] },
+  { id: "barbell-floor-to-shoulder", name: "Barbell Floor To Shoulder", equipment: ["barbell", "plate"], muscles: ["full-body", "legs", "shoulders"], category: "strength",
+    cues: ["Bar over the mid-foot, squat down and grip", "Stand up fast, pulling the bar up close to the body", "Flip the elbows under to catch it at the shoulders, lower with control"] },
+  { id: "standing-get-up", name: "Standing Get Ups", equipment: ["bodyweight"], muscles: ["quads", "glutes", "legs"], category: "strength",
+    cues: ["Start kneeling on both knees, chest tall", "Left foot up, then right foot up, to stand", "Left knee down, then right knee down, and go again"] },
+  { id: "sprinter-sit-up", name: "Sprinter Sit Up", equipment: ["bodyweight", "mat"], muscles: ["core", "obliques"], category: "core", noWeight: true,
+    cues: ["Lie flat, legs long", "Sit up and drive the right elbow to the left knee", "Lower down, then swap sides"] },
+  { id: "bosu-plate-hold-wiggle", name: "Bosu : Hold Plate : Wiggle Left & Right", equipment: ["bosu", "plate"], muscles: ["core", "obliques", "shoulders"], category: "strength",
+    cues: ["Stand on the curved side of the Bosu, feet either side, knees slightly bent", "Hold the plate straight out in front, arms long", "Wobble the hips left, then right — keep the plate still"] },
 
   // ───────────── Dumbbell ─────────────
   { id: "goblet-squat", name: "Goblet Squat", equipment: ["dumbbell", "kettlebell"], muscles: ["quads", "glutes", "core"], category: "strength", image: "goblet-squat",

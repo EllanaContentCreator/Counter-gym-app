@@ -35,3 +35,33 @@ for (const m of out) {
   console.log(`${tag} ${m.confidence.toFixed(2)}  ${m.readName.slice(0, 46).padEnd(46)} -> ${m.isNew ? "(created)" : m.exercise.name}`);
 }
 console.log(`\nmatched ${matched}/${out.length}   (* = matched but library entry has no picture)`);
+
+// Lana's 12 Oct sheet. Every one of these used to land on the wrong drawing:
+// a chest press for the fly, Leg Extension for Standing Get Ups, a cable crunch
+// for the floor abs, a plate halo for the Bosu hold.
+const oct12: Array<[string, string | null]> = [
+  ["Dumbbell Chest Fly On Bench", "dumbbell-chest-fly"],
+  ["Barbell Floor To Shoulder : 15kgs", "barbell-floor-to-shoulder"],
+  ["Plate Get Up", "plate-get-up"],
+  ["Standing Get Ups : Kneel : Left Leg Up, Right Leg Up, Left Leg Down, Right Leg Down", "standing-get-up"],
+  ["ALL : Sprinter Sit Up / Crunch / Reverse Curl / Butterfly Sit Up", "sprinter-sit-up"],
+  ["Dumbbell Shoulder Press", "dumbbell-shoulder-press"],
+  ["Barbell Bent Over Row : 15kgs", "barbell-bent-over-row"],
+  ["Bosu : Hold Plate : Feet On Either Side : Wiggle Left & Right", "bosu-plate-hold-wiggle"],
+  ["Standing Get Ups : Right Side", "standing-get-up"],
+  ["Incline Leg Press + Sumo Leg Press", "incline-leg-press-pulse"],
+];
+const got = matchRows(oct12.map(([exercise]) => ({ slot: "1", exercise, weight: "", sets: "", reps: "", rest: "" })) as never, []);
+let bad = 0;
+console.log("\n12 Oct sheet");
+got.forEach((m, i) => {
+  const [name, want] = oct12[i];
+  const ok = want === null ? m.isNew && !m.exercise.image : !m.isNew && m.exercise.id === want;
+  if (!ok) bad++;
+  console.log(`${ok ? "PASS" : "FAIL"}  ${name.slice(0, 46).padEnd(46)} -> ${m.isNew ? `(created, ${m.exercise.image ?? "muscle map"})` : m.exercise.id}`);
+});
+if (bad) {
+  console.log(`\n${bad} wrong`);
+  process.exit(1);
+}
+console.log("\nAll passed");
